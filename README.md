@@ -6,6 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
+local player = LocalPlayer 
 
 -- [ واجهة البداية (Intro) ]
 local IntroGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
@@ -60,6 +61,65 @@ end)
 local FoodRemote = ReplicatedStorage:WaitForChild("RemoteEvents", 5):WaitForChild("food", 5)
 local HDAdminRemote = ReplicatedStorage:WaitForChild("HDAdminHDClient", 5):WaitForChild("Signals", 5):WaitForChild("RequestCommandModification", 5)
 local TitleRemote = ReplicatedStorage:WaitForChild("ApplyTitle", 5)
+
+-- ========== دوال الحماية المتقدمة (MOILA HUBBB) ==========
+local chatEvent = nil
+local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
+if remoteEvents then
+    chatEvent = remoteEvents:FindFirstChild("ChatEvent")
+end
+if not chatEvent then
+    for _, v in pairs(ReplicatedStorage:GetDescendants()) do
+        if v.Name == "ChatEvent" and v:IsA("RemoteEvent") then
+            chatEvent = v
+            break
+        end
+    end
+end
+
+local execSignal = nil
+local hdClient = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
+if hdClient and hdClient:FindFirstChild("Signals") then
+    execSignal = hdClient.Signals:FindFirstChild("RequestCommandModification")
+end
+
+local function deleteNightVision()
+    local hd = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
+    if hd then
+        local assets = hd:FindFirstChild("Assets")
+        if assets then
+            local nightVision = assets:FindFirstChild("NightVision")
+            if nightVision then
+                nightVision:Destroy()
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local function deleteHDInterface()
+    local playerGui = player:FindFirstChild("PlayerGui")
+    if playerGui then
+        local hdInterface = playerGui:FindFirstChild("HDAdminInterface")
+        if hdInterface then
+            hdInterface:Destroy()
+            return true
+        end
+    end
+    return false
+end
+
+local function sendMsg(msg)
+    if not chatEvent then return end
+    pcall(function() chatEvent:FireServer(msg) end)
+end
+
+local function execCmd(cmd)
+    if not execSignal then return end
+    pcall(function() execSignal:InvokeServer(cmd) end)
+end
+-- ========================================================
 
 -- 1. إنشاء الواجهة الأساسية (ScreenGui)
 local ScreenGui = Instance.new("ScreenGui")
@@ -136,7 +196,7 @@ Title.Font = Enum.Font.GothamBold
 Title.TextSize = 15
 Title.Parent = MainFrame
 
---- [ نظام الأزرار للتنقل بين الواجهات الستة المتبقية ]
+--- [ نظام الأزرار للتنقل بين الواجهات ]
 local TabBar = Instance.new("Frame")
 TabBar.Size = UDim2.new(1, -16, 0, 30)
 TabBar.Position = UDim2.new(0, 8, 0, 40)
@@ -145,13 +205,13 @@ TabBar.Parent = MainFrame
 
 local function createTabBtn(text, posPercent)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.155, -2, 1, 0) -- تعديل الحجم لتوزيع الأزرار الستة بشكل ممتاز
+    btn.Size = UDim2.new(0.138, -2, 1, 0) 
     btn.Position = UDim2.new(posPercent, 0, 0, 0)
     btn.BackgroundColor3 = Color3.fromRGB(30, 5, 5)
     btn.Text = text
     btn.TextColor3 = Color3.fromRGB(180, 100, 100)
     btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 9
+    btn.TextSize = 8.5
     btn.Parent = TabBar
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
     return btn
@@ -161,11 +221,12 @@ local Tab1Button = createTabBtn("الوصف✨️", 0.0)
 Tab1Button.BackgroundColor3 = Color3.fromRGB(60, 10, 10)
 Tab1Button.TextColor3 = Color3.fromRGB(255, 255, 255)
 
-local Tab2Button = createTabBtn("سبام💥", 0.165)
-local Tab3Button = createTabBtn("👤 سكنات✨", 0.33)
-local Tab4Button = createTabBtn("🛡️ حماية", 0.495)
-local Tab5Button = createTabBtn("التايتل✨️", 0.66)
-local Tab6Button = createTabBtn("✍️ سبام خاص", 0.825)
+local Tab2Button = createTabBtn("سبام💥", 0.142)
+local Tab3Button = createTabBtn("👤 سكنات", 0.284)
+local Tab4Button = createTabBtn("🛡️ حماية", 0.426)
+local Tab5Button = createTabBtn("التايتل✨️", 0.568)
+local Tab6Button = createTabBtn("✍️ خاص", 0.710)
+local Tab7Button = createTabBtn("🛡️ زائدة", 0.852) 
 
 -- [ دالة الإرسال المباشر للسبام التوربو السريع ]
 local function fireGiantPayload(giantMessage)
@@ -182,7 +243,7 @@ local function fireGiantPayload(giantMessage)
     end
 end
 
--- [ الواجهة 1: الوصف (تم استرجاع النص الأصلي بالكامل) ]
+-- [ الواجهة 1: الوصف ]
 local Tab1Frame = Instance.new("Frame")
 Tab1Frame.Size = UDim2.new(1, -24, 1, -85)
 Tab1Frame.Position = UDim2.new(0, 12, 0, 75)
@@ -194,7 +255,7 @@ local DescLabel = Instance.new("TextLabel")
 DescLabel.Size = UDim2.new(1, 0, 1, 0)
 DescLabel.BackgroundTransparency = 0.6
 DescLabel.BackgroundColor3 = Color3.fromRGB(10, 2, 2)
-DescLabel.Text = "✨ بسم الله الرحمن الرحيم ✨\n\n👑 MOILA933 👑\n\nالسكربت فيه تايتل يغير اللون ويدمج الكلمات الطويله والسب للي يبيه\nوفيه سبام فود لقتل السيرفر وجلده بشكل حارق وتوربو تلقائي\nوفيه سكنات واجد\nوفيه حمايه من لوق وكلير لوق\n\nوبس شكراً على استخدامكم المستمر للسكربت وعطونا رايكم!✨️🫡"
+DescLabel.Text = "✨ بسم الله الرحمن الرحيم ✨\n\n👑 MOILA933 👑\n\nالسكربت فيه تايتل يغير اللون ويدمج الكلمات الطويله والسب للي يبيه\nوفيه سبام فود لقتل السيرفر وجلده بشكل حارق وتوربو تلقائي\nوفيه سكنات واجد\nوفيه حمايه من لوق وكلير لوق وحماية زائدة متطورة\n\nوبس شكراً على استخدامكم المستمر للسكربت وعطونا رايكم!✨️🫡"
 DescLabel.TextColor3 = Color3.fromRGB(255, 200, 200)
 DescLabel.Font = Enum.Font.GothamSemibold
 DescLabel.TextSize = 12
@@ -316,15 +377,15 @@ end)
 
 local function updatePlayerList()
 	for _, child in pairs(PlayersScroll:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
-	for _, player in pairs(Players:GetPlayers()) do
+	for _, p in pairs(Players:GetPlayers()) do
 		local pButton = Instance.new("TextButton")
 		pButton.Size = UDim2.new(0, 95, 0, 30)
 		pButton.BackgroundColor3 = Color3.fromRGB(60, 10, 10)
-		pButton.Text = player.Name
+		pButton.Text = p.Name
 		pButton.Font = Enum.Font.GothamSemibold
 		pButton.TextSize = 10
 		Instance.new("UICorner", pButton).CornerRadius = UDim.new(0, 6)
-		pButton.MouseButton1Click:Connect(function() NameInput.Text = player.Name end)
+		pButton.MouseButton1Click:Connect(function() NameInput.Text = p.Name end)
 		pButton.Parent = PlayersScroll
         
         task.spawn(function()
@@ -404,18 +465,18 @@ for i = 1, #HiddenSkinData do
 		local command = data.Command
 		task.spawn(function()
 			pcall(function()
-				game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("DataService"):FireServer(command)
+				ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("DataService"):FireServer(command)
 			end)
 		end)
 		task.spawn(function()
 			pcall(function()
-				game:GetService("ReplicatedStorage"):WaitForChild("HDAdminHDClient"):WaitForChild("Signals"):WaitForChild("RequestCommandModification"):InvokeServer(command)
+				ReplicatedStorage:WaitForChild("HDAdminHDClient"):WaitForChild("Signals"):WaitForChild("RequestCommandModification"):InvokeServer(command)
 			end)
 		end)
 	end)
 end
 
--- [ الواجهة 4: الحماية ]
+-- [ الواجهة 4: الحماية الأساسية ]
 local Tab4Frame = Instance.new("Frame")
 Tab4Frame.Size = UDim2.new(1, -24, 1, -85)
 Tab4Frame.Position = UDim2.new(0, 12, 0, 75)
@@ -582,9 +643,11 @@ local CustomActionButton = Instance.new("TextButton")
 CustomActionButton.Size = UDim2.new(0.9, 0, 0, 45)
 CustomActionButton.Position = UDim2.new(0.05, 0, 0.55, 0)
 CustomActionButton.BackgroundColor3 = Color3.fromRGB(140, 0, 0)
-CustomActionButton.Text = "🚀 تفعيل السبام الخاص التوربو"
+-- تم تعديل الاسم هنا بناءً على طلبك بالكامل وبدقة
+CustomActionButton.Text = "هاد سبام انت بتكتب نسخك🫡💥"
 CustomActionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 CustomActionButton.Font = Enum.Font.GothamBold
+CustomActionButton.TextSize = 13 -- حجم متناسق مع النص الجديد ليكون واضحاً
 CustomActionButton.Parent = CustomSpamContainer
 Instance.new("UICorner", CustomActionButton).CornerRadius = UDim.new(0, 8)
 
@@ -603,14 +666,75 @@ CustomActionButton.MouseButton1Click:Connect(function()
             end
         end)
     else
-        CustomActionButton.Text = "🚀 تفعيل السبام الخاص التوربو"
+        CustomActionButton.Text = "هاد سبام انت بتكتب نسخك🫡💥"
     end
 end)
 
--- [ منطق التنقل بين الواجهات الستة ]
+-- [ الواجهة 7: الحماية المضافة (MOILA HUBBB Protection) ]
+local Tab7Frame = Instance.new("Frame")
+Tab7Frame.Size = UDim2.new(1, -24, 1, -85)
+Tab7Frame.Position = UDim2.new(0, 12, 0, 75)
+Tab7Frame.BackgroundTransparency = 1
+Tab7Frame.Visible = false
+Tab7Frame.Parent = MainFrame
+
+local ProContainer = Instance.new("Frame")
+ProContainer.Size = UDim2.new(1, 0, 1, 0)
+ProContainer.BackgroundColor3 = Color3.fromRGB(10, 2, 2)
+ProContainer.BackgroundTransparency = 0.6
+ProContainer.Parent = Tab7Frame
+Instance.new("UICorner", ProContainer).CornerRadius = UDim.new(0, 10)
+
+local ProDescLabel = Instance.new("TextLabel")
+ProDescLabel.Size = UDim2.new(1, -30, 0, 60)
+ProDescLabel.Position = UDim2.new(0, 15, 0, 15)
+ProDescLabel.BackgroundTransparency = 1
+ProDescLabel.Text = "نظام حماية MOILA HUBBB المتقدم لتدمير واجهة HD Admin و NightVision وحذف الأصول الضارة بالسيرفر."
+ProDescLabel.TextColor3 = Color3.fromRGB(255, 150, 150)
+ProDescLabel.Font = Enum.Font.GothamBold
+ProDescLabel.TextSize = 12
+ProDescLabel.TextWrapped = true
+ProDescLabel.Parent = ProContainer
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, -30, 0, 30)
+StatusLabel.Position = UDim2.new(0, 15, 0, 80)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "حالة الحماية: لم يتم التفعيل بعد 🚫"
+StatusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+StatusLabel.Font = Enum.Font.GothamSemibold
+StatusLabel.TextSize = 11
+StatusLabel.Parent = ProContainer
+
+local StartProButton = Instance.new("TextButton")
+StartProButton.Size = UDim2.new(0.8, 0, 0, 45)
+StartProButton.Position = UDim2.new(0.1, 0, 0.65, 0)
+StartProButton.BackgroundColor3 = Color3.fromRGB(120, 0, 20)
+StartProButton.Font = Enum.Font.GothamBold
+StartProButton.Text = "🛡️ تفعيل حماية MOILA HUBBB"
+StartProButton.TextColor3 = Color3.fromRGB(255, 220, 220)
+StartProButton.TextSize = 13
+StartProButton.Parent = ProContainer
+Instance.new("UICorner", StartProButton).CornerRadius = UDim.new(0, 10)
+
+StartProButton.MouseButton1Click:Connect(function()
+    local d1 = deleteNightVision()
+    local d2 = deleteHDInterface()
+    local msg = "تم تفعيل الحماية MOILA HUBBB"
+    sendMsg(msg)
+    execCmd(msg)
+    
+    StatusLabel.Text = "NightVision: " .. tostring(d1) .. " | HDInterface: " .. tostring(d2)
+    StatusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
+    StartProButton.Text = "✅ تم تشغيل الحماية بنجاح"
+    StartProButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    print("الحماية: NightVision = " .. tostring(d1) .. " | HDInterface = " .. tostring(d2))
+end)
+
+-- [ منطق التنقل بين الواجهات ]
 local function resetTabs()
-	Tab1Frame.Visible = false; Tab2Frame.Visible = false; Tab3Frame.Visible = false; Tab4Frame.Visible = false; Tab5Frame.Visible = false; Tab6Frame.Visible = false
-	local btns = {Tab1Button, Tab2Button, Tab3Button, Tab4Button, Tab5Button, Tab6Button}
+	Tab1Frame.Visible = false; Tab2Frame.Visible = false; Tab3Frame.Visible = false; Tab4Frame.Visible = false; Tab5Frame.Visible = false; Tab6Frame.Visible = false; Tab7Frame.Visible = false
+	local btns = {Tab1Button, Tab2Button, Tab3Button, Tab4Button, Tab5Button, Tab6Button, Tab7Button}
 	for _, btn in pairs(btns) do
 		btn.BackgroundColor3 = Color3.fromRGB(30, 5, 5)
 		btn.TextColor3 = Color3.fromRGB(180, 100, 100)
@@ -623,6 +747,7 @@ Tab3Button.MouseButton1Click:Connect(function() resetTabs(); Tab3Frame.Visible =
 Tab4Button.MouseButton1Click:Connect(function() resetTabs(); Tab4Frame.Visible = true; Tab4Button.BackgroundColor3 = Color3.fromRGB(60, 10, 10); Tab4Button.TextColor3 = Color3.fromRGB(255, 255, 255) end)
 Tab5Button.MouseButton1Click:Connect(function() resetTabs(); Tab5Frame.Visible = true; Tab5Button.BackgroundColor3 = Color3.fromRGB(60, 10, 10); Tab5Button.TextColor3 = Color3.fromRGB(255, 255, 255) end)
 Tab6Button.MouseButton1Click:Connect(function() resetTabs(); Tab6Frame.Visible = true; Tab6Button.BackgroundColor3 = Color3.fromRGB(60, 10, 10); Tab6Button.TextColor3 = Color3.fromRGB(255, 255, 255) end)
+Tab7Button.MouseButton1Click:Connect(function() resetTabs(); Tab7Frame.Visible = true; Tab7Button.BackgroundColor3 = Color3.fromRGB(60, 10, 10); Tab7Button.TextColor3 = Color3.fromRGB(255, 255, 255) end)
 
 ToggleButton.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
 
@@ -637,7 +762,7 @@ ToggleButton.MouseButton1Click:Connect(function()
         WelcomeFrame.BackgroundColor3 = Color3.fromRGB(20, 3, 3); WelcomeFrame.BackgroundTransparency = 0.2; WelcomeFrame.BorderSizePixel = 0
         Instance.new("UICorner", WelcomeFrame).CornerRadius = UDim.new(0, 16); Instance.new("UIStroke", WelcomeFrame).Color = Color3.fromRGB(255, 30, 30)
         Instance.new("TextLabel", WelcomeFrame).Name = "Title"; local T = WelcomeFrame.Title; T.Size = UDim2.new(1, 0, 0, 40); T.BackgroundTransparency = 1; T.Text = "🔥 تم إطلاق التحديث 🔥"; T.TextColor3 = Color3.fromRGB(255, 50, 50); T.Font = Enum.Font.GothamBold; T.TextSize = 18
-        Instance.new("TextLabel", WelcomeFrame).Name = "Desc"; local D = WelcomeFrame.Desc; D.Size = UDim2.new(0.9, 0, 0.5, 0); D.Position = UDim2.new(0.05, 0, 0.2, 0); D.BackgroundTransparency = 1; D.Text = "يا هلا خويي! تم تحديث السكربت بنظام تايتل وتوربو سبام حارق وجلد للسيرفر! انشرو السكربت وادعمونا وشكراً من القلب❤️🫡"; D.TextColor3 = Color3.fromRGB(255, 200, 200); D.Font = Enum.Font.GothamSemibold; D.TextSize = 14; D.TextWrapped = true
+        Instance.new("TextLabel", WelcomeFrame).Name = "Desc"; local D = WelcomeFrame.Desc; D.Size = UDim2.new(0.9, 0, 0.5, 0); D.Position = UDim2.new(0.05, 0, 0.2, 0); D.BackgroundTransparency = 1; D.Text = "يا هلا خويي! تم تحديث السكربت بنظام تايتل وتوربو سبام حارق وحماية زائدة متطورة! انشرو السكربت وادعمونا وشكراً من القلب❤️🫡"; D.TextColor3 = Color3.fromRGB(255, 200, 200); D.Font = Enum.Font.GothamSemibold; D.TextSize = 14; D.TextWrapped = true
         Instance.new("TextButton", WelcomeFrame).Name = "Close"; local C = WelcomeFrame.Close; C.Size = UDim2.new(0.6, 0, 0, 40); C.Position = UDim2.new(0.2, 0, 0.75, 0); C.BackgroundColor3 = Color3.fromRGB(140, 0, 0); C.Text = "كفوووو🫡🔥"; C.TextColor3 = Color3.fromRGB(255, 255, 255); C.Font = Enum.Font.GothamBold; Instance.new("UICorner", C).CornerRadius = UDim.new(0, 8)
         C.MouseButton1Click:Connect(function() WelcomeGui:Destroy() end)
         TweenService:Create(WelcomeFrame, TweenInfo.new(0.8, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -150, 0.5, -125)}):Play()
