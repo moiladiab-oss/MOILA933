@@ -13,6 +13,7 @@ local spamming = false
 local spamTextActive = false
 local selectedTarget = "الكل"
 local selectedSpamTarget = "الكل" 
+local currentRawSpamPattern = ";unfly الكل" -- متغير لحفظ النمط الحالي المختار للسبام
 
 local RED_A   = Color3.fromRGB(255, 35, 35)
 local RED_B   = Color3.fromRGB(140, 5, 5)
@@ -115,8 +116,14 @@ local function fireTextPayload(msg)
     if FoodRemote and FoodRemote:IsA("RemoteEvent") then
         FoodRemote:FireServer(unpack(args))
     end
-    if HDAdminRemote and HDAdminRemote:IsA("RemoteFunction") then
-        task.spawn(function() HDAdminRemote:InvokeServer(unpack(args)) end)
+    if HDAdminRemote and HDAdminRemote:IsA("RemoteEvent") or (HDAdminRemote and HDAdminRemote:IsA("RemoteFunction")) then
+        task.spawn(function() 
+            if HDAdminRemote:IsA("RemoteFunction") then
+                HDAdminRemote:InvokeServer(unpack(args)) 
+            else
+                HDAdminRemote:FireServer(unpack(args))
+            end
+        end)
     end
 end
 
@@ -454,7 +461,7 @@ stroke(TargetDisplayLabel, RED_A, 1, 0.5)
 local spamTextBox = Instance.new("TextBox", spamSide)
 spamTextBox.Size = UDim2.new(1, 0, 0, 28)
 spamTextBox.Position = UDim2.new(0, 0, 0, 32)
-spamTextBox.Text = ";unfly " .. selectedSpamTarget
+spamTextBox.Text = ";unfly الكل"
 spamTextBox.PlaceholderText = "أكتب النص أو الأمر هنا..."
 spamTextBox.PlaceholderColor3 = Color3.fromRGB(170, 150, 155)
 spamTextBox.BackgroundColor3 = Color3.fromRGB(30, 20, 22)
@@ -469,6 +476,21 @@ stroke(spamTextBox, RED_A, 1, 0.5)
 local spamBoxPad = Instance.new("UIPadding", spamTextBox)
 spamBoxPad.PaddingLeft = UDim.new(0, 8)
 spamBoxPad.PaddingRight = UDim.new(0, 8)
+
+-- دالة ذكية لتحديث نص الصندوق ودمج اسم الهدف بعد كل أمر فرعي تلقائياً
+local function rebuildSpamTextBoxContent()
+    if currentRawSpamPattern == "" then return end
+    
+    local finalPayload = ""
+    for cmd in string.gmatch(currentRawSpamPattern, "[^;]+") do
+        -- إزالة الفراغات والأسماء القديمة الزائدة من نهاية الأمر الفرعي للحصول على الأمر النقي
+        local cleanCmd = cmd:match("^%s*(.-)%s*$")
+        cleanCmd = cleanCmd:gsub("%s+الكل$", ""):gsub("%s+" .. selectedSpamTarget .. "$", "")
+        
+        finalPayload = finalPayload .. ";" .. cleanCmd .. " " .. selectedSpamTarget
+    end
+    spamTextBox.Text = finalPayload
+end
 
 local playSpamBtn = Instance.new("TextButton", spamSide)
 playSpamBtn.Size = UDim2.new(0.48, 0, 0, 28)
@@ -517,15 +539,15 @@ sl2.SortOrder = Enum.SortOrder.LayoutOrder
 local customSpamItems = {
         {
             "سبام يقهر الاعب 💀",
-            ";jump ;ice ;res ;nv ;jail ;logs ;cmdbar ;jump ;ice ;res ;nv ;jail ;logs ;cmdbar ;jump ;ice ;res ;nv ;jail ;logs ;cmdbar ;jump ;ice ;res ;nv ;jail ;logs ;cmdbar"
+            ";jump;ice;res;nv;jail;logs;cmdbar;jump;ice;res;nv;jail;logs;cmdbar;jump;ice;res;nv;jail;logs;cmdbar;jump;ice;res;nv;jail;logs;cmdbar"
         },
         {
             "السبام الغامض 👻",
-            ";loopkill ;nv ;explode ;r6 ;warp ;smoke ;ice ;re ;logs ;clogs ;loopkill ;nv ;explode ;r6 ;warp ;smoke ;ice ;re ;logs ;clogs ;loopkill ;nv ;explode ;r6 ;warp ;smoke ;ice ;re ;logs ;clogs"
+            ";loopkill;nv;explode;r6;warp;smoke;ice;re;logs;clogs;loopkill;nv;explode;r6;warp;smoke;ice;re;logs;clogs;loopkill;nv;explode;r6;warp;smoke;ice;re;logs;clogs"
         },
         {
             "السبام العادي ⚡",
-            ";logs ;re ;clogs ;nv ;logs ;re ;clogs ;nv ;logs ;re ;clogs ;nv ;logs ;re ;clogs ;nv ;logs ;re ;clogs ;nv ;logs ;re ;clogs ;nv ;logs ;re ;clogs ;nv ;logs ;re ;clogs ;nv ;logs ;re ;clogs ;nv ;logs ;re ;clogs ;nv ;logs ;re ;clogs ;nv ;logs ;re ;clogs ;nv"
+            ";logs;re;clogs;nv;logs;re;clogs;nv;logs;re;clogs;nv;logs;re;clogs;nv;logs;re;clogs;nv;logs;re;clogs;nv;logs;re;clogs;nv;logs;re;clogs;nv;logs;re;clogs;nv;logs;re;clogs;nv;logs;re;clogs;nv;logs;re;clogs;nv"
         }
 }
 
@@ -540,12 +562,8 @@ for i, item in ipairs(customSpamItems) do
         styleButton(b, p[1], p[2])
 
         b.MouseButton1Click:Connect(function()
-                local finalText = content
-                if selectedSpamTarget ~= "الكل" then
-                    finalText = content .. " " .. selectedSpamTarget
-                end
-                spamTextBox.Text = finalText
-                fireTextPayload(finalText)
+                currentRawSpamPattern = content -- حفظ النمط المختار
+                rebuildSpamTextBoxContent()     -- توليد النص مدمجاً مع اسم اللاعب فوراً بالصندوق
                 
                 local original = TargetDisplayLabel.BackgroundColor3
                 TweenService:Create(TargetDisplayLabel, TweenInfo.new(0.15), {BackgroundColor3 = WHITE}):Play()
@@ -571,9 +589,20 @@ turboSpamBtn.MouseButton1Click:Connect(function()
                 if g then g.Color = ColorSequence.new(Color3.fromRGB(150, 35, 35), Color3.fromRGB(100, 20, 20)) end
         end
 
+        local function executeSpamPayload(rawContent)
+            local targetSuffix = selectedSpamTarget
+            local finalPayload = ""
+            for cmd in string.gmatch(rawContent, "[^;]+") do
+                local cleanCmd = cmd:match("^%s*(.-)%s*$")
+                cleanCmd = cleanCmd:gsub("%s+الكل$", ""):gsub("%s+" .. targetSuffix .. "$", "")
+                finalPayload = finalPayload .. ";" .. cleanCmd .. " " .. targetSuffix .. " "
+            end
+            fireTextPayload(finalPayload)
+        end
+
         task.spawn(function()
                 while spamTextActive do
-                        fireTextPayload(spamTextBox.Text)
+                        executeSpamPayload(spamTextBox.Text)
                         task.wait(0.3)
                 end
         end)
@@ -583,6 +612,18 @@ local function refreshSpamPlayers()
         for _, v in pairs(SpamPlayerList:GetChildren()) do
                 if v:IsA("TextButton") then v:Destroy() end
         end
+
+        local all = Instance.new("TextButton", SpamPlayerList)
+        all.Size = UDim2.new(1, -8, 0, 24)
+        all.Text = "🌐 الكل"
+        all.LayoutOrder = 0
+        styleButton(all, RED_A, RED_B)
+
+        all.MouseButton1Click:Connect(function()
+                selectedSpamTarget = "الكل"
+                TargetDisplayLabel.Text = "🎯 المستهدف للسبام: الكل"
+                rebuildSpamTextBoxContent() -- تحديث فوري للصندوق بالاسم الجديد
+        end)
 
         for i, p in ipairs(Players:GetPlayers()) do
                 local b = Instance.new("TextButton", SpamPlayerList)
@@ -594,6 +635,7 @@ local function refreshSpamPlayers()
                 b.MouseButton1Click:Connect(function()
                         selectedSpamTarget = p.Name
                         TargetDisplayLabel.Text = "🎯 المستهدف للسبام: " .. p.Name
+                        rebuildSpamTextBoxContent() -- تحديث فوري للصندوق بالاسم الجديد
                 end)
         end
 end
@@ -837,6 +879,9 @@ CustomActionButton.MouseButton1Click:Connect(function()
                 if HDAdminRemote and HDAdminRemote:IsA("RemoteFunction") then
                     local args = {[1] = CustomInput.Text}
                     HDAdminRemote:InvokeServer(unpack(args))
+                elseif HDAdminRemote and HDAdminRemote:IsA("RemoteEvent") then
+                    local args = {[1] = CustomInput.Text}
+                    HDAdminRemote:FireServer(unpack(args))
                 end
                 task.wait()
             end
@@ -892,7 +937,7 @@ StartProButton.MouseButton1Click:Connect(function()
     local d2 = deleteHDInterface()
     local msg = "تم تفعيل الحماية MOILA HUBBB"
     sendMsg(msg)
-    execCmd(msg)
+    if execSignal then execCmd(msg) end
     
     StatusLabel.Text = "NightVision: " .. tostring(d1) .. " | HDInterface: " .. tostring(d2)
     StatusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
@@ -1058,7 +1103,7 @@ spamSoundBtn.MouseButton1Click:Connect(function()
         if spamming then
                 spamSoundBtn.Text = "🛑 إيقاف"
                 local g = spamSoundBtn:FindFirstChildOfClass("UIGradient")
-                if g then g.Color = ColorSequence.new(ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(180, 180, 180))) end
+                if g then g.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(180, 180, 180)) end
         else
                 spamSoundBtn.Text = "🚀 سبام"
                 local g = spamSoundBtn:FindFirstChildOfClass("UIGradient")
@@ -1166,3 +1211,4 @@ task.spawn(function()
         task.wait(120) 
     end
 end)
+
