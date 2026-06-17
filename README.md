@@ -1,193 +1,301 @@
--- [[ واجهة ايقاف مؤقت ]] --
+-- [[ MO SPAM ]] --
 
-local Players      = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
+local UIS          = game:GetService("UserInputService")
+local Players      = game:GetService("Players")
+local RS           = game:GetService("ReplicatedStorage")
 local LocalPlayer  = Players.LocalPlayer
 
+local LGREEN = Color3.fromRGB(100, 255, 120)  -- أخضر فاتح للحواف
+local GREEN  = Color3.fromRGB(0, 210, 80)
+local RED    = Color3.fromRGB(220, 40, 40)
+local BLACK  = Color3.fromRGB(0, 0, 0)
+local WHITE  = Color3.fromRGB(255, 255, 255)
+
+local spamming  = false
+local spamDelay = 0.0
+local spamConn  = nil
+
+-- ======= إرسال الرسالة =======
+local function sendMsg(msg)
+        -- طريقة 1: HD Admin Remote (الريموت المطلوب)
+        local hdOk = pcall(function()
+                local hd = RS:FindFirstChild("HDAdminHDClient")
+                if not hd then error("no hd") end
+                local sig = hd:FindFirstChild("Signals")
+                if not sig then error("no sig") end
+                local rem = sig:FindFirstChild("RequestCommandModification")
+                if not rem then error("no rem") end
+                rem:InvokeServer(msg)
+        end)
+        if hdOk then return end
+        -- طريقة 2: نظام الشات الجديد
+        local ok2 = pcall(function()
+                local tcs = game:GetService("TextChatService")
+                local ch  = tcs.TextChannels:FindFirstChild("RBXGeneral")
+                if not ch then error("no ch") end
+                ch:SendAsync(msg)
+        end)
+        if ok2 then return end
+        -- طريقة 3: نظام الشات القديم
+        pcall(function()
+                RS:WaitForChild("DefaultChatSystemChatEvents", 2)
+                  :WaitForChild("SayMessageRequest", 2)
+                  :FireServer(msg, "All")
+        end)
+end
+
+local function corner(p, r)
+        Instance.new("UICorner", p).CornerRadius = UDim.new(0, r or 10)
+end
+
+local function makeDraggable(frame)
+        local dragging, dragInput, dragStart, startPos
+        frame.InputBegan:Connect(function(inp)
+                if inp.UserInputType == Enum.UserInputType.MouseButton1 or
+                   inp.UserInputType == Enum.UserInputType.Touch then
+                        dragging = true; dragStart = inp.Position; startPos = frame.Position
+                        inp.Changed:Connect(function()
+                                if inp.UserInputState == Enum.UserInputState.End then dragging = false end
+                        end)
+                end
+        end)
+        frame.InputChanged:Connect(function(inp)
+                if inp.UserInputType == Enum.UserInputType.MouseMovement or
+                   inp.UserInputType == Enum.UserInputType.Touch then dragInput = inp end
+        end)
+        UIS.InputChanged:Connect(function(inp)
+                if inp == dragInput and dragging then
+                        local d = inp.Position - dragStart
+                        frame.Position = UDim2.new(
+                                startPos.X.Scale, startPos.X.Offset + d.X,
+                                startPos.Y.Scale, startPos.Y.Offset + d.Y)
+                end
+        end)
+end
+
+-- ======= الواجهة =======
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "MO_PAUSED_GUI"
+ScreenGui.Name = "MO_SPAM"
 ScreenGui.ResetOnSpawn = false
-ScreenGui.IgnoreGuiInset = true
-ScreenGui.DisplayOrder = 999
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
--- خلفية شفافة داكنة
-local Overlay = Instance.new("Frame")
-Overlay.Size = UDim2.new(1, 0, 1, 0)
-Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Overlay.BackgroundTransparency = 0.45
-Overlay.BorderSizePixel = 0
-Overlay.Parent = ScreenGui
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 310, 0, 280)
+MainFrame.Position = UDim2.new(0.5, -155, 0.5, -140)
+MainFrame.BackgroundColor3 = BLACK
+MainFrame.BackgroundTransparency = 0
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Parent = ScreenGui
+corner(MainFrame, 18)
+makeDraggable(MainFrame)
 
--- الإطار الرئيسي
-local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0, 320, 0, 370)
-Main.Position = UDim2.new(0.5, -160, 0.5, -185)
-Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Main.BackgroundTransparency = 0.05
-Main.BorderSizePixel = 0
-Main.Parent = ScreenGui
-local mc = Instance.new("UICorner", Main)
-mc.CornerRadius = UDim.new(0, 20)
-
--- حافة خضراء متوهجة
-local mainStroke = Instance.new("UIStroke", Main)
-mainStroke.Color = Color3.fromRGB(100, 255, 120)
+-- حواف خضراء فاتحة متوهجة
+local mainStroke = Instance.new("UIStroke", MainFrame)
+mainStroke.Color = LGREEN
 mainStroke.Thickness = 2.5
 mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 task.spawn(function()
-        while Main and Main.Parent do
+        while MainFrame and MainFrame.Parent do
                 local p = (math.sin(tick() * 2) + 1) / 2
-                mainStroke.Transparency = p * 0.5
+                mainStroke.Transparency = p * 0.45
                 mainStroke.Thickness = 2 + p * 1.5
                 task.wait(0.03)
         end
 end)
 
--- انيميشن ظهور
-Main.AnchorPoint = Vector2.new(0.5, 0.5)
-Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-Main.Size = UDim2.new(0, 0, 0, 0)
-TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-        {Size = UDim2.new(0, 320, 0, 370)}):Play()
-
 -- العنوان
-local TitleLbl = Instance.new("TextLabel")
-TitleLbl.Size = UDim2.new(1, 0, 0, 44)
-TitleLbl.Position = UDim2.new(0, 0, 0, 8)
-TitleLbl.BackgroundTransparency = 1
-TitleLbl.Text = "☢️ MO HUB ☢️"
-TitleLbl.TextColor3 = Color3.fromRGB(100, 255, 120)
-TitleLbl.Font = Enum.Font.GothamBold
-TitleLbl.TextSize = 18
-TitleLbl.Parent = Main
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 44)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "☢️ MO SPAM ☢️"
+Title.TextColor3 = LGREEN
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 17
+Title.Parent = MainFrame
 task.spawn(function()
-        while TitleLbl and TitleLbl.Parent do
+        while Title and Title.Parent do
                 local p = (math.sin(tick() * 2.5) + 1) / 2
-                TitleLbl.TextColor3 = Color3.fromRGB(
-                        math.floor(70 + p * 60),
-                        math.floor(210 + p * 45),
-                        math.floor(100 + p * 55))
+                Title.TextColor3 = Color3.fromRGB(
+                        math.floor(80 + p * 80),
+                        math.floor(220 + p * 35),
+                        math.floor(100 + p * 50))
                 task.wait(0.04)
         end
 end)
 
--- إطار الصورة
-local AvatarFrame = Instance.new("Frame")
-AvatarFrame.Size = UDim2.new(0, 150, 0, 150)
-AvatarFrame.Position = UDim2.new(0.5, -75, 0, 58)
-AvatarFrame.BackgroundColor3 = Color3.fromRGB(10, 30, 10)
-AvatarFrame.BorderSizePixel = 0
-AvatarFrame.Parent = Main
-local afc = Instance.new("UICorner", AvatarFrame)
-afc.CornerRadius = UDim.new(1, 0)
-local afStroke = Instance.new("UIStroke", AvatarFrame)
-afStroke.Color = Color3.fromRGB(100, 255, 120)
-afStroke.Thickness = 3
-afStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+-- ======= دائرة التشغيل/الإيقاف =======
+local CircleBtn = Instance.new("TextButton")
+CircleBtn.Size = UDim2.new(0, 38, 0, 38)
+CircleBtn.Position = UDim2.new(1, -48, 0, 3)
+CircleBtn.BackgroundColor3 = RED
+CircleBtn.Text = "▶"
+CircleBtn.TextColor3 = WHITE
+CircleBtn.TextSize = 16
+CircleBtn.Font = Enum.Font.GothamBold
+CircleBtn.AutoButtonColor = false
+CircleBtn.ZIndex = 10
+CircleBtn.Parent = MainFrame
+corner(CircleBtn, 999)
+local circleStroke = Instance.new("UIStroke", CircleBtn)
+circleStroke.Color = WHITE; circleStroke.Thickness = 2
+circleStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- توهج الدائرة
 task.spawn(function()
-        while AvatarFrame and AvatarFrame.Parent do
-                local p = (math.sin(tick() * 2 + 1) + 1) / 2
-                afStroke.Transparency = p * 0.4
-                task.wait(0.03)
-        end
-end)
-
--- صورة اللاعب moila933
-local AvatarImg = Instance.new("ImageLabel")
-AvatarImg.Size = UDim2.new(1, -8, 1, -8)
-AvatarImg.Position = UDim2.new(0, 4, 0, 4)
-AvatarImg.BackgroundTransparency = 1
-AvatarImg.Image = ""
-AvatarImg.Parent = AvatarFrame
-local imgc = Instance.new("UICorner", AvatarImg)
-imgc.CornerRadius = UDim.new(1, 0)
-
--- جلب صورة اللاعب
-task.spawn(function()
-        local ok, userId = pcall(function()
-                return Players:GetUserIdFromNameAsync("moila933")
-        end)
-        if ok and userId then
-                local ok2, img = pcall(function()
-                        return Players:GetUserThumbnailAsync(
-                                userId,
-                                Enum.ThumbnailType.AvatarBust,
-                                Enum.ThumbnailSize.Size420x420)
-                end)
-                if ok2 and img then
-                        AvatarImg.Image = img
-                end
-        end
-end)
-
--- اسم اللاعب
-local NameLbl = Instance.new("TextLabel")
-NameLbl.Size = UDim2.new(1, -20, 0, 30)
-NameLbl.Position = UDim2.new(0, 10, 0, 215)
-NameLbl.BackgroundTransparency = 1
-NameLbl.Text = "moila933"
-NameLbl.TextColor3 = Color3.fromRGB(100, 255, 120)
-NameLbl.Font = Enum.Font.GothamBold
-NameLbl.TextSize = 18
-NameLbl.Parent = Main
-
--- خط فاصل
-local Line = Instance.new("Frame")
-Line.Size = UDim2.new(0.8, 0, 0, 1)
-Line.Position = UDim2.new(0.1, 0, 0, 252)
-Line.BackgroundColor3 = Color3.fromRGB(100, 255, 120)
-Line.BackgroundTransparency = 0.5
-Line.BorderSizePixel = 0
-Line.Parent = Main
-
--- نص الإيقاف
-local PausedLbl = Instance.new("TextLabel")
-PausedLbl.Size = UDim2.new(1, -20, 0, 50)
-PausedLbl.Position = UDim2.new(0, 10, 0, 260)
-PausedLbl.BackgroundTransparency = 1
-PausedLbl.Text = "⏸️ تم إيقاف السكربت مؤقتاً"
-PausedLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-PausedLbl.Font = Enum.Font.GothamBold
-PausedLbl.TextSize = 15
-PausedLbl.TextWrapped = true
-PausedLbl.Parent = Main
-task.spawn(function()
-        while PausedLbl and PausedLbl.Parent do
+        while CircleBtn and CircleBtn.Parent do
                 local p = (math.sin(tick() * 3) + 1) / 2
-                PausedLbl.TextTransparency = p * 0.5
+                if spamming then
+                        CircleBtn.BackgroundColor3 = Color3.fromRGB(0, math.floor(170 + p * 40), math.floor(60 + p * 20))
+                        circleStroke.Color = LGREEN
+                else
+                        CircleBtn.BackgroundColor3 = Color3.fromRGB(math.floor(170 + p * 50), 0, 0)
+                        circleStroke.Color = WHITE
+                end
                 task.wait(0.04)
         end
 end)
 
--- زر الإغلاق
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0.7, 0, 0, 40)
-CloseBtn.Position = UDim2.new(0.15, 0, 0, 318)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
-CloseBtn.Text = "✖ إغلاق"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 14
-CloseBtn.AutoButtonColor = false
-CloseBtn.Parent = Main
-local cc = Instance.new("UICorner", CloseBtn)
-cc.CornerRadius = UDim.new(0, 10)
-local cs = Instance.new("UIStroke", CloseBtn)
-cs.Color = Color3.fromRGB(100, 255, 120); cs.Thickness = 1.5
-cs.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-CloseBtn.MouseEnter:Connect(function()
-        TweenService:Create(CloseBtn, TweenInfo.new(0.15),
-                {BackgroundColor3 = Color3.fromRGB(30, 120, 30)}):Play()
-end)
-CloseBtn.MouseLeave:Connect(function()
-        TweenService:Create(CloseBtn, TweenInfo.new(0.15),
-                {BackgroundColor3 = Color3.fromRGB(20, 80, 20)}):Play()
-end)
-CloseBtn.MouseButton1Click:Connect(function()
-        TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In),
-                {Size = UDim2.new(0, 0, 0, 0)}):Play()
-        task.wait(0.3)
-        ScreenGui:Destroy()
+-- تسمية الرسالة
+local MsgLabel = Instance.new("TextLabel")
+MsgLabel.Size = UDim2.new(1, -20, 0, 22)
+MsgLabel.Position = UDim2.new(0, 10, 0, 52)
+MsgLabel.BackgroundTransparency = 1
+MsgLabel.Text = "📝 الرسالة:"
+MsgLabel.TextColor3 = LGREEN
+MsgLabel.Font = Enum.Font.GothamBold
+MsgLabel.TextSize = 13
+MsgLabel.TextXAlignment = Enum.TextXAlignment.Right
+MsgLabel.Parent = MainFrame
+
+-- صندوق الرسالة
+local MsgBox = Instance.new("TextBox")
+MsgBox.Size = UDim2.new(1, -20, 0, 50)
+MsgBox.Position = UDim2.new(0, 10, 0, 76)
+MsgBox.BackgroundColor3 = Color3.fromRGB(8, 18, 8)
+MsgBox.BackgroundTransparency = 0
+MsgBox.PlaceholderText = "اكتب رسالة السبام..."
+MsgBox.PlaceholderColor3 = Color3.fromRGB(70, 130, 70)
+MsgBox.Text = ""
+MsgBox.TextColor3 = WHITE
+MsgBox.Font = Enum.Font.GothamBold
+MsgBox.TextSize = 13
+MsgBox.ClearTextOnFocus = false
+MsgBox.TextXAlignment = Enum.TextXAlignment.Right
+MsgBox.MultiLine = false
+MsgBox.Parent = MainFrame
+corner(MsgBox, 10)
+local mStroke = Instance.new("UIStroke", MsgBox)
+mStroke.Color = LGREEN; mStroke.Thickness = 1.5
+mStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- تسمية السرعة
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Size = UDim2.new(1, -20, 0, 22)
+SpeedLabel.Position = UDim2.new(0, 10, 0, 140)
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.Text = "⚡ السرعة (ثانية) — 0 = أسرع ما يمكن:"
+SpeedLabel.TextColor3 = LGREEN
+SpeedLabel.Font = Enum.Font.GothamBold
+SpeedLabel.TextSize = 12
+SpeedLabel.TextXAlignment = Enum.TextXAlignment.Right
+SpeedLabel.Parent = MainFrame
+
+-- صندوق السرعة
+local SpeedBox = Instance.new("TextBox")
+SpeedBox.Size = UDim2.new(1, -20, 0, 36)
+SpeedBox.Position = UDim2.new(0, 10, 0, 164)
+SpeedBox.BackgroundColor3 = Color3.fromRGB(8, 18, 8)
+SpeedBox.BackgroundTransparency = 0
+SpeedBox.PlaceholderText = "0.0"
+SpeedBox.PlaceholderColor3 = Color3.fromRGB(70, 130, 70)
+SpeedBox.Text = "0.0"
+SpeedBox.TextColor3 = WHITE
+SpeedBox.Font = Enum.Font.GothamBold
+SpeedBox.TextSize = 14
+SpeedBox.ClearTextOnFocus = false
+SpeedBox.TextXAlignment = Enum.TextXAlignment.Center
+SpeedBox.Parent = MainFrame
+corner(SpeedBox, 10)
+local sStroke = Instance.new("UIStroke", SpeedBox)
+sStroke.Color = LGREEN; sStroke.Thickness = 1.5
+sStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+SpeedBox.FocusLost:Connect(function()
+        local val = tonumber(SpeedBox.Text)
+        spamDelay = val and math.max(0, val) or spamDelay
+        SpeedBox.Text = tostring(spamDelay)
 end)
 
+-- ======= زر السبام الكبير =======
+local SpamBtn = Instance.new("TextButton")
+SpamBtn.Size = UDim2.new(1, -20, 0, 48)
+SpamBtn.Position = UDim2.new(0, 10, 0, 218)
+SpamBtn.BackgroundColor3 = RED
+SpamBtn.Text = "🔴  ابدأ السبام"
+SpamBtn.TextColor3 = WHITE
+SpamBtn.Font = Enum.Font.GothamBold
+SpamBtn.TextSize = 15
+SpamBtn.AutoButtonColor = false
+SpamBtn.Parent = MainFrame
+corner(SpamBtn, 12)
+local sbStroke = Instance.new("UIStroke", SpamBtn)
+sbStroke.Color = LGREEN; sbStroke.Thickness = 1.5
+sbStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+SpamBtn.MouseButton1Down:Connect(function()
+        TweenService:Create(SpamBtn, TweenInfo.new(0.07),
+                {Size = UDim2.new(1,-24,0,44), Position = UDim2.new(0,12,0,222)}):Play()
+end)
+SpamBtn.MouseButton1Up:Connect(function()
+        TweenService:Create(SpamBtn, TweenInfo.new(0.15, Enum.EasingStyle.Back),
+                {Size = UDim2.new(1,-20,0,48), Position = UDim2.new(0,10,0,218)}):Play()
+end)
+
+-- توهج الزر الكبير
+task.spawn(function()
+        while SpamBtn and SpamBtn.Parent do
+                local p = (math.sin(tick() * 3) + 1) / 2
+                if spamming then
+                        SpamBtn.BackgroundColor3 = Color3.fromRGB(0, math.floor(160+p*50), math.floor(50+p*30))
+                else
+                        SpamBtn.BackgroundColor3 = Color3.fromRGB(math.floor(160+p*60), 0, 0)
+                end
+                task.wait(0.04)
+        end
+end)
+
+local function toggleSpam()
+        if not spamming then
+                local msg = MsgBox.Text
+                if msg == "" then
+                        SpamBtn.Text = "⚠️ اكتب رسالة أولاً!"
+                        CircleBtn.Text = "!"
+                        task.wait(1.5)
+                        SpamBtn.Text = "🔴  ابدأ السبام"
+                        CircleBtn.Text = "▶"
+                        return
+                end
+                spamming = true
+                SpamBtn.Text = "🟢  إيقاف السبام"
+                CircleBtn.Text = "■"
+                spamConn = task.spawn(function()
+                        while spamming do
+                                local m = MsgBox.Text
+                                if m ~= "" then sendMsg(m) end
+                                local d = math.max(0, spamDelay)
+                                if d <= 0 then task.wait() else task.wait(d) end
+                        end
+                end)
+        else
+                spamming = false
+                if spamConn then task.cancel(spamConn); spamConn = nil end
+                SpamBtn.Text = "🔴  ابدأ السبام"
+                CircleBtn.Text = "▶"
+        end
+end
+
+SpamBtn.MouseButton1Click:Connect(toggleSpam)
+CircleBtn.MouseButton1Click:Connect(toggleSpam)
