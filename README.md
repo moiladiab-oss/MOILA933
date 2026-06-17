@@ -1,46 +1,236 @@
--- MO HUB [OBFUSCATED]
-local _lvg28vr2=load
+-- [[ واجهة ايقاف مؤقت ]] --
+
+local Players      = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer  = Players.LocalPlayer
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MO_PAUSED_GUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.DisplayOrder = 999
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- خلفية شفافة داكنة
+local Overlay = Instance.new("Frame")
+Overlay.Size = UDim2.new(1, 0, 1, 0)
+Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Overlay.BackgroundTransparency = 0.45
+Overlay.BorderSizePixel = 0
+Overlay.Parent = ScreenGui
+
+-- الإطار الرئيسي
+local Main = Instance.new("Frame")
+Main.Size = UDim2.new(0, 320, 0, 370)
+Main.Position = UDim2.new(0.5, -160, 0.5, -185)
+Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Main.BackgroundTransparency = 0.05
+Main.BorderSizePixel = 0
+Main.Parent = ScreenGui
+local mc = Instance.new("UICorner", Main)
+mc.CornerRadius = UDim.new(0, 20)
+
+-- حافة خضراء متوهجة
+local mainStroke = Instance.new("UIStroke", Main)
+mainStroke.Color = Color3.fromRGB(100, 255, 120)
+mainStroke.Thickness = 2.5
+mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+task.spawn(function()
+        while Main and Main.Parent do
+                local p = (math.sin(tick() * 2) + 1) / 2
+                mainStroke.Transparency = p * 0.5
+                mainStroke.Thickness = 2 + p * 1.5
+                task.wait(0.03)
+        end
+end)
+
+-- انيميشن ظهور
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+Main.Size = UDim2.new(0, 0, 0, 0)
+TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+        {Size = UDim2.new(0, 320, 0, 370)}):Play()
+
+-- العنوان
+local TitleLbl = Instance.new("TextLabel")
+TitleLbl.Size = UDim2.new(1, 0, 0, 44)
+TitleLbl.Position = UDim2.new(0, 0, 0, 8)
+TitleLbl.BackgroundTransparency = 1
+TitleLbl.Text = "☢️ MO HUB ☢️"
+TitleLbl.TextColor3 = Color3.fromRGB(100, 255, 120)
+TitleLbl.Font = Enum.Font.GothamBold
+TitleLbl.TextSize = 18
+TitleLbl.Parent = Main
+task.spawn(function()
+        while TitleLbl and TitleLbl.Parent do
+                local p = (math.sin(tick() * 2.5) + 1) / 2
+                TitleLbl.TextColor3 = Color3.fromRGB(
+                        math.floor(70 + p * 60),
+                        math.floor(210 + p * 45),
+                        math.floor(100 + p * 55))
+                task.wait(0.04)
+        end
+end)
+
+-- إطار الصورة
+local AvatarFrame = Instance.new("Frame")
+AvatarFrame.Size = UDim2.new(0, 150, 0, 150)
+AvatarFrame.Position = UDim2.new(0.5, -75, 0, 58)
+AvatarFrame.BackgroundColor3 = Color3.fromRGB(10, 30, 10)
+AvatarFrame.BorderSizePixel = 0
+AvatarFrame.Parent = Main
+local afc = Instance.new("UICorner", AvatarFrame)
+afc.CornerRadius = UDim.new(1, 0)
+local afStroke = Instance.new("UIStroke", AvatarFrame)
+afStroke.Color = Color3.fromRGB(100, 255, 120)
+afStroke.Thickness = 3
+afStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+task.spawn(function()
+        while AvatarFrame and AvatarFrame.Parent do
+                local p = (math.sin(tick() * 2 + 1) + 1) / 2
+                afStroke.Transparency = p * 0.4
+                task.wait(0.03)
+        end
+end)
+
+-- صورة اللاعب moila933
+local AvatarImg = Instance.new("ImageLabel")
+AvatarImg.Size = UDim2.new(1, -8, 1, -8)
+AvatarImg.Position = UDim2.new(0, 4, 0, 4)
+AvatarImg.BackgroundTransparency = 1
+AvatarImg.Image = ""
+AvatarImg.Parent = AvatarFrame
+local imgc = Instance.new("UICorner", AvatarImg)
+imgc.CornerRadius = UDim.new(1, 0)
+
+-- جلب صورة اللاعب
+task.spawn(function()
+        local ok, userId = pcall(function()
+                return Players:GetUserIdFromNameAsync("moila933")
+        end)
+        if ok and userId then
+                local ok2, img = pcall(function()
+                        return Players:GetUserThumbnailAsync(
+                                userId,
+                                Enum.ThumbnailType.AvatarBust,
+                                Enum.ThumbnailSize.Size420x420)
+                end)
+                if ok2 and img then
+                        AvatarImg.Image = img
+                end
+        end
+end)
+
+-- اسم اللاعب
+local NameLbl = Instance.new("TextLabel")
+NameLbl.Size = UDim2.new(1, -20, 0, 30)
+NameLbl.Position = UDim2.new(0, 10, 0, 215)
+NameLbl.BackgroundTransparency = 1
+NameLbl.Text = "moila933"
+NameLbl.TextColor3 = Color3.fromRGB(100, 255, 120)
+NameLbl.Font = Enum.Font.GothamBold
+NameLbl.TextSize = 18
+NameLbl.Parent = Main
+
+-- خط فاصل
+local Line = Instance.new("Frame")
+Line.Size = UDim2.new(0.8, 0, 0, 1)
+Line.Position = UDim2.new(0.1, 0, 0, 252)
+Line.BackgroundColor3 = Color3.fromRGB(100, 255, 120)
+Line.BackgroundTransparency = 0.5
+Line.BorderSizePixel = 0
+Line.Parent = Main
+
+-- نص الإيقاف
+local PausedLbl = Instance.new("TextLabel")
+PausedLbl.Size = UDim2.new(1, -20, 0, 50)
+PausedLbl.Position = UDim2.new(0, 10, 0, 260)
+PausedLbl.BackgroundTransparency = 1
+PausedLbl.Text = "رح ينزل اليوم حماية من jail و ice"
+PausedLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+PausedLbl.Font = Enum.Font.GothamBold
+PausedLbl.TextSize = 15
+PausedLbl.TextWrapped = true
+PausedLbl.Parent = Main
+task.spawn(function()
+        while PausedLbl and PausedLbl.Parent do
+                local p = (math.sin(tick() * 3) + 1) / 2
+                PausedLbl.TextTransparency = p * 0.5
+                task.wait(0.04)
+        end
+end)
+
+-- زر الإغلاق
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0.7, 0, 0, 40)
+CloseBtn.Position = UDim2.new(0.15, 0, 0, 318)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
+CloseBtn.Text = "✖ إغلاق"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 14
+CloseBtn.AutoButtonColor = false
+CloseBtn.Parent = Main
+local cc = Instance.new("UICorner", CloseBtn)
+cc.CornerRadius = UDim.new(0, 10)
+local cs = Instance.new("UIStroke", CloseBtn)
+cs.Color = Color3.fromRGB(100, 255, 120); cs.Thickness = 1.5
+cs.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+CloseBtn.MouseEnter:Connect(function()
+        TweenService:Create(CloseBtn, TweenInfo.new(0.15),
+                {BackgroundColor3 = Color3.fromRGB(30, 120, 30)}):Play()
+end)
+CloseBtn.MouseLeave:Connect(function()
+        TweenService:Create(CloseBtn, TweenInfo.new(0.15),
+                {BackgroundColor3 = Color3.fromRGB(20, 80, 20)}):Play()
+end)
+CloseBtn.MouseButton1Click:Connect(function()
+        TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+                {Size = UDim2.new(0, 0, 0, 0)}):Play()
+        task.wait(0.3)
+        ScreenGui:Destroy()
+end)
 -- [[ MO HUB — FIXED VERSION ]] --
 
-local TweenService = game:GetService(string.char(84,119,101,101,110,83,101,114,118,105,99,101))
-local Players      = game:GetService(string.char(80,108,97,121,101,114,115))
-local StarterGui   = game:GetService(string.char(83,116,97,114,116,101,114,71,117,105))
+local TweenService = game:GetService("TweenService")
+local Players      = game:GetService("Players")
+local StarterGui   = game:GetService("StarterGui")
 local LocalPlayer  = Players.LocalPlayer
 
 local function notify(title, msg)
         pcall(function()
-                StarterGui:SetCore(string.char(83,101,110,100,78,111,116,105,102,105,99,97,116,105,111,110), {Title=title, Text=msg, Duration=6})
+                StarterGui:SetCore("SendNotification", {Title=title, Text=msg, Duration=6})
         end)
 end
 
 -- ===================== INTRO =====================
 local function runIntro(onDone)
-        local TargetParent = LocalPlayer:WaitForChild(string.char(80,108,97,121,101,114,71,117,105))
+        local TargetParent = LocalPlayer:WaitForChild("PlayerGui")
         pcall(function()
-                local cg = game:GetService(string.char(67,111,114,101,71,117,105))
+                local cg = game:GetService("CoreGui")
                 if cg then TargetParent = cg end
         end)
 
-        local IntroGui = Instance.new(string.char(83,99,114,101,101,110,71,117,105))
-        IntroGui.Name = string.char(77,79,95,72,85,66,95,73,110,116,114,111,71,117,105)
+        local IntroGui = Instance.new("ScreenGui")
+        IntroGui.Name = "MO_HUB_IntroGui"
         IntroGui.ResetOnSpawn = false
         IntroGui.IgnoreGuiInset = true
         IntroGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
         IntroGui.DisplayOrder = 2147483647
         IntroGui.Parent = TargetParent
 
-        local Background = Instance.new(string.char(70,114,97,109,101))
+        local Background = Instance.new("Frame")
         Background.Size = UDim2.new(1,0,1,0)
         Background.BackgroundColor3 = Color3.fromRGB(0,0,0)
         Background.BorderSizePixel = 0
         Background.Parent = IntroGui
 
-        local IntroSound = Instance.new(string.char(83,111,117,110,100))
+        local IntroSound = Instance.new("Sound")
         IntroSound.SoundId = "rbxassetid://1841683877"
         IntroSound.Volume = 1
         IntroSound.Parent = IntroGui
 
-        local ImageLabel = Instance.new(string.char(73,109,97,103,101,76,97,98,101,108))
+        local ImageLabel = Instance.new("ImageLabel")
         ImageLabel.Size = UDim2.new(0,200,0,200)
         ImageLabel.Position = UDim2.new(0.5,-100,0.5,-100)
         ImageLabel.BackgroundTransparency = 1
@@ -48,7 +238,7 @@ local function runIntro(onDone)
         ImageLabel.ImageTransparency = 1
         ImageLabel.Parent = Background
 
-        local FlashFrame = Instance.new(string.char(70,114,97,109,101))
+        local FlashFrame = Instance.new("Frame")
         FlashFrame.Size = UDim2.new(1,0,1,0)
         FlashFrame.BackgroundColor3 = Color3.fromRGB(255,255,255)
         FlashFrame.BackgroundTransparency = 1
@@ -56,18 +246,18 @@ local function runIntro(onDone)
         FlashFrame.ZIndex = 2
         FlashFrame.Parent = Background
 
-        local TextLabel = Instance.new(string.char(84,101,120,116,76,97,98,101,108))
+        local TextLabel = Instance.new("TextLabel")
         TextLabel.Size = UDim2.new(1,0,0,100)
         TextLabel.Position = UDim2.new(0,0,0.5,-50)
         TextLabel.BackgroundTransparency = 1
-        TextLabel.Text = string.char(77,79,32,84,79,80,32,49)
+        TextLabel.Text = "MO TOP 1"
         TextLabel.TextColor3 = Color3.fromRGB(255,255,255)
         TextLabel.TextSize = 50
         TextLabel.Font = Enum.Font.Code
         TextLabel.TextTransparency = 1
         TextLabel.Parent = Background
 
-        local SkipHintLabel = Instance.new(string.char(84,101,120,116,76,97,98,101,108))
+        local SkipHintLabel = Instance.new("TextLabel")
         SkipHintLabel.Size = UDim2.new(1,0,0,50)
         SkipHintLabel.Position = UDim2.new(0,0,1,-60)
         SkipHintLabel.BackgroundTransparency = 1
@@ -79,13 +269,13 @@ local function runIntro(onDone)
         SkipHintLabel.ZIndex = 11
         SkipHintLabel.Parent = Background
 
-        local GlitchFrame = Instance.new(string.char(70,114,97,109,101))
+        local GlitchFrame = Instance.new("Frame")
         GlitchFrame.Size = UDim2.new(1,0,1,0)
         GlitchFrame.BackgroundTransparency = 1
         GlitchFrame.BorderSizePixel = 0
         GlitchFrame.Parent = Background
 
-        local SkipButton = Instance.new(string.char(84,101,120,116,66,117,116,116,111,110))
+        local SkipButton = Instance.new("TextButton")
         SkipButton.Size = UDim2.new(1,0,1,0)
         SkipButton.BackgroundTransparency = 1
         SkipButton.Text = ""
@@ -94,14 +284,14 @@ local function runIntro(onDone)
 
         local function createGlitchLine()
                 if not GlitchFrame or not GlitchFrame.Parent then return end
-                local line = Instance.new(string.char(70,114,97,109,101))
+                local line = Instance.new("Frame")
                 line.Size = UDim2.new(1,0,0,math.random(5,20))
                 line.Position = UDim2.new(0,0,math.random(0,90)/100,0)
                 local colors = {Color3.fromRGB(255,0,0),Color3.fromRGB(0,255,0),Color3.fromRGB(0,0,255),Color3.fromRGB(255,0,255)}
                 line.BackgroundColor3 = colors[math.random(1,#colors)]
                 line.BorderSizePixel = 0
                 line.Parent = GlitchFrame
-                game:GetService(string.char(68,101,98,114,105,115)):AddItem(line, 0.1)
+                game:GetService("Debris"):AddItem(line, 0.1)
         end
 
         local isSkipped = false
@@ -140,14 +330,14 @@ local function runIntro(onDone)
                 }
                 local startTime = os.time()
                 while os.time()-startTime < 6 and not isSkipped do
-                        if ImageLabel and ImageLabel.Parent then ImageLabel:TweenSize(UDim2.new(0,230,0,230),string.char(79,117,116),string.char(81,117,97,100),0.15,true) end
+                        if ImageLabel and ImageLabel.Parent then ImageLabel:TweenSize(UDim2.new(0,230,0,230),"Out","Quad",0.15,true) end
                         if FlashFrame and FlashFrame.Parent then
                                 FlashFrame.BackgroundColor3 = flashColors[math.random(1,#flashColors)]
                                 FlashFrame.BackgroundTransparency = 0.65
                         end
                         task.wait(0.1)
                         if FlashFrame and FlashFrame.Parent then FlashFrame.BackgroundTransparency = 1 end
-                        if ImageLabel and ImageLabel.Parent then ImageLabel:TweenSize(UDim2.new(0,200,0,200),string.char(73,110),string.char(81,117,97,100),0.15,true) end
+                        if ImageLabel and ImageLabel.Parent then ImageLabel:TweenSize(UDim2.new(0,200,0,200),"In","Quad",0.15,true) end
                         task.wait(0.4)
                 end
         end
@@ -191,10 +381,10 @@ end
 
 -- ===================== HUB =====================
 local function runHub()
-        local RunService  = game:GetService(string.char(82,117,110,83,101,114,118,105,99,101))
-        local StarterGui  = game:GetService(string.char(83,116,97,114,116,101,114,71,117,105))
-        local UIS         = game:GetService(string.char(85,115,101,114,73,110,112,117,116,83,101,114,118,105,99,101))
-        local RS          = game:GetService(string.char(82,101,112,108,105,99,97,116,101,100,83,116,111,114,97,103,101))
+        local RunService  = game:GetService("RunService")
+        local StarterGui  = game:GetService("StarterGui")
+        local UIS         = game:GetService("UserInputService")
+        local RS          = game:GetService("ReplicatedStorage")
         local player      = LocalPlayer
 
         local spamming       = false
@@ -213,10 +403,10 @@ local function runHub()
         }
 
         local function getSoundRemote()
-                local gui = LocalPlayer.PlayerGui:FindFirstChild(string.char(77,111,117,110,116,101,100,71,117,105))
+                local gui = LocalPlayer.PlayerGui:FindFirstChild("MountedGui")
                 if gui then
                         for _, v in pairs(gui:GetDescendants()) do
-                                if v.Name == string.char(82,101,109,111,116,101) and v:IsA(string.char(82,101,109,111,116,101,69,118,101,110,116)) then return v end
+                                if v.Name == "Remote" and v:IsA("RemoteEvent") then return v end
                         end
                 end
         end
@@ -234,27 +424,27 @@ local function runHub()
         local chatEvent  = nil
         local execSignal = nil
         pcall(function()
-                local re = RS:WaitForChild(string.char(82,101,109,111,116,101,69,118,101,110,116,115), 3)
-                if re then chatEvent = re:FindFirstChild(string.char(67,104,97,116,69,118,101,110,116)) end
+                local re = RS:WaitForChild("RemoteEvents", 3)
+                if re then chatEvent = re:FindFirstChild("ChatEvent") end
         end)
         if not chatEvent then
                 for _, v in pairs(RS:GetDescendants()) do
-                        if v.Name == string.char(67,104,97,116,69,118,101,110,116) and v:IsA(string.char(82,101,109,111,116,101,69,118,101,110,116)) then chatEvent = v; break end
+                        if v.Name == "ChatEvent" and v:IsA("RemoteEvent") then chatEvent = v; break end
                 end
         end
         pcall(function()
-                local hdc = RS:FindFirstChild(string.char(72,68,65,100,109,105,110,72,68,67,108,105,101,110,116))
-                if hdc and hdc:FindFirstChild(string.char(83,105,103,110,97,108,115)) then
-                        execSignal = hdc.Signals:FindFirstChild(string.char(82,101,113,117,101,115,116,67,111,109,109,97,110,100,77,111,100,105,102,105,99,97,116,105,111,110))
+                local hdc = RS:FindFirstChild("HDAdminHDClient")
+                if hdc and hdc:FindFirstChild("Signals") then
+                        execSignal = hdc.Signals:FindFirstChild("RequestCommandModification")
                 end
         end)
 
         local function deleteNightVision()
-                local hd = RS:FindFirstChild(string.char(72,68,65,100,109,105,110,72,68,67,108,105,101,110,116))
+                local hd = RS:FindFirstChild("HDAdminHDClient")
                 if hd then
-                        local assets = hd:FindFirstChild(string.char(65,115,115,101,116,115))
+                        local assets = hd:FindFirstChild("Assets")
                         if assets then
-                                local nv = assets:FindFirstChild(string.char(78,105,103,104,116,86,105,115,105,111,110))
+                                local nv = assets:FindFirstChild("NightVision")
                                 if nv then nv:Destroy(); return true end
                         end
                 end
@@ -262,9 +452,9 @@ local function runHub()
         end
 
         local function deleteHDInterface()
-                local pg = player:FindFirstChild(string.char(80,108,97,121,101,114,71,117,105))
+                local pg = player:FindFirstChild("PlayerGui")
                 if pg then
-                        local hdi = pg:FindFirstChild(string.char(72,68,65,100,109,105,110,73,110,116,101,114,102,97,99,101))
+                        local hdi = pg:FindFirstChild("HDAdminInterface")
                         if hdi then hdi:Destroy(); return true end
                 end
                 return false
@@ -283,25 +473,25 @@ local function runHub()
         pcall(function() game.CoreGui.MOILA933SoundHub:Destroy() end)
         pcall(function() LocalPlayer.PlayerGui.MOILA933_Mini_System:Destroy() end)
 
-        local ScreenGui = Instance.new(string.char(83,99,114,101,101,110,71,117,105))
-        ScreenGui.Name = string.char(77,79,73,76,65,57,51,51,95,77,105,110,105,95,83,121,115,116,101,109)
+        local ScreenGui = Instance.new("ScreenGui")
+        ScreenGui.Name = "MOILA933_Mini_System"
         ScreenGui.ResetOnSpawn = false
-        ScreenGui.Parent = LocalPlayer:WaitForChild(string.char(80,108,97,121,101,114,71,117,105))
+        ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
         -- ===== HELPERS =====
         local function corner(p, r)
-                local c = Instance.new(string.char(85,73,67,111,114,110,101,114), p)
+                local c = Instance.new("UICorner", p)
                 c.CornerRadius = UDim.new(0, r or 12)
                 return c
         end
         local function gradient(p, c1, c2, rot)
-                local g = Instance.new(string.char(85,73,71,114,97,100,105,101,110,116), p)
+                local g = Instance.new("UIGradient", p)
                 g.Color = ColorSequence.new(c1, c2)
                 g.Rotation = rot or 90
                 return g
         end
         local function stroke(p, col, t, trans)
-                local s = Instance.new(string.char(85,73,83,116,114,111,107,101), p)
+                local s = Instance.new("UIStroke", p)
                 s.Color = col; s.Thickness = t or 1
                 s.Transparency = trans or 0
                 s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
@@ -335,7 +525,7 @@ local function runHub()
                 btn.MouseButton1Down:Connect(function()
                         local m = UIS:GetMouseLocation()
                         local abs = btn.AbsolutePosition
-                        local rip = Instance.new(string.char(70,114,97,109,101), btn)
+                        local rip = Instance.new("Frame", btn)
                         rip.BackgroundColor3 = WHITE
                         rip.BackgroundTransparency = 0.6
                         rip.BorderSizePixel = 0
@@ -394,19 +584,19 @@ local function runHub()
         end
 
         -- ===== TOGGLE =====
-        local ToggleButton = Instance.new(string.char(84,101,120,116,66,117,116,116,111,110))
+        local ToggleButton = Instance.new("TextButton")
         ToggleButton.Size = UDim2.new(0,55,0,55)
         ToggleButton.Position = UDim2.new(0,20,0.5,-27)
         ToggleButton.BackgroundColor3 = BLUE_A
         ToggleButton.BackgroundTransparency = 0.2
-        ToggleButton.Text = string.char(77,79)
+        ToggleButton.Text = "MO"
         ToggleButton.TextColor3 = WHITE
         ToggleButton.TextSize = 20
         ToggleButton.Font = Enum.Font.GothamBold
         ToggleButton.Active = true
         ToggleButton.Parent = ScreenGui
-        local tc = Instance.new(string.char(85,73,67,111,114,110,101,114)); tc.CornerRadius = UDim.new(1,0); tc.Parent = ToggleButton
-        local ts = Instance.new(string.char(85,73,83,116,114,111,107,101)); ts.Thickness = 3; ts.Color = BLUE_A; ts.Parent = ToggleButton
+        local tc = Instance.new("UICorner"); tc.CornerRadius = UDim.new(1,0); tc.Parent = ToggleButton
+        local ts = Instance.new("UIStroke"); ts.Thickness = 3; ts.Color = BLUE_A; ts.Parent = ToggleButton
         makeDraggable(ToggleButton)
         task.spawn(function()
                 while ToggleButton and ToggleButton.Parent do
@@ -420,7 +610,7 @@ local function runHub()
         end)
 
         -- ===== MAIN FRAME =====
-        local MainFrame = Instance.new(string.char(70,114,97,109,101))
+        local MainFrame = Instance.new("Frame")
         MainFrame.Size = UDim2.new(0,640,0,430)
         MainFrame.Position = UDim2.new(0.5,-320,0.5,-215)
         MainFrame.BackgroundColor3 = DARK
@@ -430,7 +620,7 @@ local function runHub()
         MainFrame.Active = true
         MainFrame.Parent = ScreenGui
         corner(MainFrame, 16)
-        local MainStroke = Instance.new(string.char(85,73,83,116,114,111,107,101))
+        local MainStroke = Instance.new("UIStroke")
         MainStroke.Color = WHITE; MainStroke.Thickness = 2; MainStroke.Transparency = 0.3
         MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border; MainStroke.Parent = MainFrame
         task.spawn(function()
@@ -442,13 +632,13 @@ local function runHub()
         end)
         makeDraggable(MainFrame)
 
-        local Title = Instance.new(string.char(84,101,120,116,76,97,98,101,108))
+        local Title = Instance.new("TextLabel")
         Title.Size = UDim2.new(1,-50,0,40); Title.BackgroundTransparency = 1
         Title.Text = "☢️ MOILA933 Script maker ☢️"
         Title.TextColor3 = Color3.fromRGB(80,160,255)
         Title.Font = Enum.Font.GothamBold; Title.TextSize = 15; Title.Parent = MainFrame
 
-        local CloseButton = Instance.new(string.char(84,101,120,116,66,117,116,116,111,110))
+        local CloseButton = Instance.new("TextButton")
         CloseButton.Size = UDim2.new(0,32,0,32); CloseButton.Position = UDim2.new(1,-38,0,4)
         CloseButton.BackgroundColor3 = Color3.fromRGB(180,30,30); CloseButton.Text = "✕"
         CloseButton.TextColor3 = WHITE; CloseButton.TextSize = 16; CloseButton.Font = Enum.Font.GothamBold
@@ -468,13 +658,13 @@ local function runHub()
         end)
 
         -- ===== TAB BAR — 6 تبويبات =====
-        local TabBar = Instance.new(string.char(70,114,97,109,101))
+        local TabBar = Instance.new("Frame")
         TabBar.Size = UDim2.new(1,-16,0,30); TabBar.Position = UDim2.new(0,8,0,42)
         TabBar.BackgroundTransparency = 1; TabBar.Parent = MainFrame
 
         local TAB_W = 0.1666
         local function createTabBtn(text, posPercent)
-                local btn = Instance.new(string.char(84,101,120,116,66,117,116,116,111,110))
+                local btn = Instance.new("TextButton")
                 btn.Size = UDim2.new(TAB_W,-2,1,0)
                 btn.Position = UDim2.new(posPercent,0,0,0)
                 btn.BackgroundColor3 = Color3.fromRGB(5,10,35)
@@ -484,7 +674,7 @@ local function runHub()
                 btn.TextSize = 8
                 btn.Parent = TabBar
                 corner(btn, 6)
-                local tabStroke = Instance.new(string.char(85,73,83,116,114,111,107,101))
+                local tabStroke = Instance.new("UIStroke")
                 tabStroke.Color = WHITE; tabStroke.Thickness = 1; tabStroke.Transparency = 0.7
                 tabStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border; tabStroke.Parent = btn
                 task.spawn(function()
@@ -497,32 +687,32 @@ local function runHub()
                 return btn
         end
 
-        local Tab1Button = createTabBtn("🎯سكربتات",    0.0)
+        local Tab1Button = createTabBtn("أدوات",    0.0)
         Tab1Button.BackgroundColor3 = Color3.fromRGB(10,25,70); Tab1Button.TextColor3 = WHITE
         local Tab2Button = createTabBtn("نسخ تحديث📋",  TAB_W*1)
         local Tab3Button = createTabBtn("حماية logs🛡️", TAB_W*2)
         local Tab4Button = createTabBtn("حماية nv🛡️",  TAB_W*3)
         local Tab5Button = createTabBtn("الراديو🎧",    TAB_W*4)
-        local Tab6Button = createTabBtn("الوصف✨",       TAB_W*5)
+        local Tab6Button = createTabBtn("الوصف",       TAB_W*5)
 
         local function createContainerFrame()
-                local f = Instance.new(string.char(70,114,97,109,101))
+                local f = Instance.new("Frame")
                 f.Size = UDim2.new(1,-24,1,-88); f.Position = UDim2.new(0,12,0,78)
                 f.BackgroundTransparency = 1; f.Visible = false; f.Parent = MainFrame
                 return f
         end
 
         local function makeTabContainer(parent)
-                local f = Instance.new(string.char(70,114,97,109,101))
+                local f = Instance.new("Frame")
                 f.Size = UDim2.new(1,0,1,0)
                 f.BackgroundColor3 = DARK
                 f.BackgroundTransparency = 0.5
                 f.Parent = parent
                 corner(f, 10)
-                local cs = Instance.new(string.char(85,73,83,116,114,111,107,101))
+                local cs = Instance.new("UIStroke")
                 cs.Color = WHITE; cs.Thickness = 1.5; cs.Transparency = 0.5
                 cs.ApplyStrokeMode = Enum.ApplyStrokeMode.Border; cs.Parent = f
-                local bg = Instance.new(string.char(85,73,71,114,97,100,105,101,110,116))
+                local bg = Instance.new("UIGradient")
                 bg.Color = ColorSequence.new(Color3.fromRGB(5,10,40), Color3.fromRGB(3,5,20))
                 bg.Rotation = 135; bg.Parent = f
                 task.spawn(function()
@@ -538,16 +728,16 @@ local function runHub()
         end
 
         local function makeLightTabContainer(parent)
-                local f = Instance.new(string.char(70,114,97,109,101))
+                local f = Instance.new("Frame")
                 f.Size = UDim2.new(1,0,1,0)
                 f.BackgroundColor3 = Color3.fromRGB(18,45,110)
                 f.BackgroundTransparency = 0.1
                 f.Parent = parent
                 corner(f, 10)
-                local cs = Instance.new(string.char(85,73,83,116,114,111,107,101))
+                local cs = Instance.new("UIStroke")
                 cs.Color = Color3.fromRGB(100,180,255); cs.Thickness = 2; cs.Transparency = 0.2
                 cs.ApplyStrokeMode = Enum.ApplyStrokeMode.Border; cs.Parent = f
-                local bg = Instance.new(string.char(85,73,71,114,97,100,105,101,110,116))
+                local bg = Instance.new("UIGradient")
                 bg.Color = ColorSequence.new(Color3.fromRGB(20,60,160), Color3.fromRGB(10,35,100))
                 bg.Rotation = 135; bg.Parent = f
                 task.spawn(function()
@@ -574,7 +764,7 @@ local function runHub()
         end
 
         local function makeScriptButton(parent, text, px, py, sw, sh, textColorFn, scriptUrl, origText, scriptUrl2)
-                local btn = Instance.new(string.char(84,101,120,116,66,117,116,116,111,110))
+                local btn = Instance.new("TextButton")
                 btn.Size = UDim2.new(sw,-10,sh,-10)
                 btn.Position = UDim2.new(px,5,py,5)
                 btn.Text = text
@@ -586,13 +776,13 @@ local function runHub()
                 btn.Parent = parent
                 corner(btn, 12)
 
-                local btnStroke = Instance.new(string.char(85,73,83,116,114,111,107,101), btn)
+                local btnStroke = Instance.new("UIStroke", btn)
                 btnStroke.Color = WHITE
                 btnStroke.Thickness = 2.5
                 btnStroke.Transparency = 0
                 btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
-                local btnGrad = Instance.new(string.char(85,73,71,114,97,100,105,101,110,116), btn)
+                local btnGrad = Instance.new("UIGradient", btn)
                 btnGrad.Rotation = 135
 
                 hoverScale(btn)
@@ -666,7 +856,7 @@ local function runHub()
         local Tab2Frame = createContainerFrame()
         local Tab2Container = makeTabContainer(Tab2Frame)
 
-        local t2Desc = Instance.new(string.char(84,101,120,116,76,97,98,101,108))
+        local t2Desc = Instance.new("TextLabel")
         t2Desc.Size = UDim2.new(1,-30,0,50); t2Desc.Position = UDim2.new(0,15,0,20)
         t2Desc.BackgroundTransparency = 1
         t2Desc.Text = "اضغط على الزر أدناه لتحميل وتشغيل أحدث نسخة من سكربت MO HUT 🚀"
@@ -674,7 +864,7 @@ local function runHub()
         t2Desc.TextSize = 13; t2Desc.TextWrapped = true
         t2Desc.TextXAlignment = Enum.TextXAlignment.Right; t2Desc.Parent = Tab2Container
 
-        local LoadBtn = Instance.new(string.char(84,101,120,116,66,117,116,116,111,110))
+        local LoadBtn = Instance.new("TextButton")
         LoadBtn.Size = UDim2.new(0.78,0,0,62); LoadBtn.Position = UDim2.new(0.11,0,0.42,0)
         LoadBtn.Text = "🚀 تشغيل نسخ التحديث"; LoadBtn.Font = Enum.Font.GothamBold
         LoadBtn.TextSize = 15; LoadBtn.TextColor3 = WHITE
@@ -706,14 +896,14 @@ local function runHub()
         local Tab3Frame = createContainerFrame()
         local Tab3Container = makeTabContainer(Tab3Frame)
 
-        local CleanerDesc = Instance.new(string.char(84,101,120,116,76,97,98,101,108))
+        local CleanerDesc = Instance.new("TextLabel")
         CleanerDesc.Size = UDim2.new(1,-30,0,90); CleanerDesc.Position = UDim2.new(0,15,0,15)
         CleanerDesc.BackgroundTransparency = 1
         CleanerDesc.Text = "logs و clogs اذا ضغطت على الزر الي تحت رح تجيك حماية من"
         CleanerDesc.TextColor3 = Color3.fromRGB(180,230,255); CleanerDesc.Font = Enum.Font.GothamBold
         CleanerDesc.TextSize = 13; CleanerDesc.TextWrapped = true; CleanerDesc.Parent = Tab3Container
 
-        local StartCleaner = Instance.new(string.char(84,101,120,116,66,117,116,116,111,110))
+        local StartCleaner = Instance.new("TextButton")
         StartCleaner.Size = UDim2.new(0.8,0,0,45); StartCleaner.Position = UDim2.new(0.1,0,0.65,0)
         StartCleaner.BackgroundColor3 = Color3.fromRGB(10,50,150); StartCleaner.Font = Enum.Font.GothamBold
         StartCleaner.Text = "🛡️ ACTIVATE STEALTH MODE"
@@ -726,12 +916,12 @@ local function runHub()
                 StartCleaner.BackgroundColor3 = Color3.fromRGB(30,30,30)
                 StartCleaner.Text = "✅ STEALTH MODE IS RUNNING"
                 StartCleaner.TextColor3 = Color3.fromRGB(150,150,150)
-                local PlayerGui = LocalPlayer:WaitForChild(string.char(80,108,97,121,101,114,71,117,105))
-                local Keywords = {string.char(97,100,109,105,110),string.char(99,109,100),string.char(108,111,103),string.char(99,111,110,115,111,108,101),string.char(116,101,114,109,105,110,97,108),string.char(97,100,111,110,105),string.char(107,111,104,108)}
+                local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+                local Keywords = {"admin","cmd","log","console","terminal","adoni","kohl"}
                 local function cleanUI(g)
                         local n = g.Name:lower()
                         for _, k in ipairs(Keywords) do
-                                if n:find(k) and not n:find(string.char(115,104,111,112)) and not n:find(string.char(109,101,110,117)) then
+                                if n:find(k) and not n:find("shop") and not n:find("menu") then
                                         g:Destroy(); break
                                 end
                         end
@@ -740,7 +930,7 @@ local function runHub()
                 PlayerGui.ChildAdded:Connect(cleanUI)
                 task.spawn(function()
                         while task.wait(1) do
-                                pcall(function() StarterGui:SetCore(string.char(68,101,118,67,111,110,115,111,108,101,86,105,115,105,98,108,101), false) end)
+                                pcall(function() StarterGui:SetCore("DevConsoleVisible", false) end)
                         end
                 end)
         end)
@@ -751,20 +941,20 @@ local function runHub()
         local Tab4Frame = createContainerFrame()
         local Tab4Container = makeTabContainer(Tab4Frame)
 
-        local ProDesc = Instance.new(string.char(84,101,120,116,76,97,98,101,108))
+        local ProDesc = Instance.new("TextLabel")
         ProDesc.Size = UDim2.new(1,-30,0,60); ProDesc.Position = UDim2.new(0,15,0,15)
         ProDesc.BackgroundTransparency = 1
         ProDesc.Text = "نظام حماية MOILA HUBBB المتقدم لتدمير واجهة HD Admin و NightVision وحذف الأصول الضارة بالسيرفر."
         ProDesc.TextColor3 = Color3.fromRGB(160,210,255); ProDesc.Font = Enum.Font.GothamBold
         ProDesc.TextSize = 12; ProDesc.TextWrapped = true; ProDesc.Parent = Tab4Container
 
-        local StatusLabel = Instance.new(string.char(84,101,120,116,76,97,98,101,108))
+        local StatusLabel = Instance.new("TextLabel")
         StatusLabel.Size = UDim2.new(1,-30,0,30); StatusLabel.Position = UDim2.new(0,15,0,80)
         StatusLabel.BackgroundTransparency = 1; StatusLabel.Text = "حالة الحماية: لم يتم التفعيل بعد 🚫"
         StatusLabel.TextColor3 = Color3.fromRGB(180,180,180); StatusLabel.Font = Enum.Font.GothamSemibold
         StatusLabel.TextSize = 11; StatusLabel.Parent = Tab4Container
 
-        local StartPro = Instance.new(string.char(84,101,120,116,66,117,116,116,111,110))
+        local StartPro = Instance.new("TextButton")
         StartPro.Size = UDim2.new(0.8,0,0,45); StartPro.Position = UDim2.new(0.1,0,0.65,0)
         StartPro.BackgroundColor3 = Color3.fromRGB(15,55,160); StartPro.Font = Enum.Font.GothamBold
         StartPro.Text = "🛡️ تفعيل حماية MOILA HUBBB"
@@ -775,7 +965,7 @@ local function runHub()
                 local d1 = deleteNightVision(); local d2 = deleteHDInterface()
                 local msg = "تم تفعيل الحماية MOILA HUBBB"
                 sendMsg(msg); if execSignal then execCmd(msg) end
-                StatusLabel.Text = string.char(78,105,103,104,116,86,105,115,105,111,110,58,32)..tostring(d1)..string.char(32,124,32,72,68,73,110,116,101,114,102,97,99,101,58,32)..tostring(d2)
+                StatusLabel.Text = "NightVision: "..tostring(d1).." | HDInterface: "..tostring(d2)
                 StatusLabel.TextColor3 = Color3.fromRGB(50,255,50)
                 StartPro.Text = "✅ تم تشغيل الحماية بنجاح"
                 StartPro.BackgroundColor3 = Color3.fromRGB(40,40,40)
@@ -786,13 +976,13 @@ local function runHub()
         -- ===================================================
         local Tab5Frame = createContainerFrame()
 
-        local soundPlayerList = Instance.new(string.char(83,99,114,111,108,108,105,110,103,70,114,97,109,101), Tab5Frame)
+        local soundPlayerList = Instance.new("ScrollingFrame", Tab5Frame)
         soundPlayerList.Size = UDim2.new(0,130,1,0); soundPlayerList.BackgroundColor3 = Color3.fromRGB(3,8,28)
         soundPlayerList.BackgroundTransparency = 0.3; soundPlayerList.ScrollBarThickness = 3
         soundPlayerList.ScrollBarImageColor3 = BLUE_A; soundPlayerList.BorderSizePixel = 0
         soundPlayerList.CanvasSize = UDim2.new(); soundPlayerList.AutomaticCanvasSize = Enum.AutomaticSize.Y
         corner(soundPlayerList, 10)
-        local sndListStroke = Instance.new(string.char(85,73,83,116,114,111,107,101))
+        local sndListStroke = Instance.new("UIStroke")
         sndListStroke.Color = WHITE; sndListStroke.Thickness = 1; sndListStroke.Transparency = 0.6
         sndListStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border; sndListStroke.Parent = soundPlayerList
         task.spawn(function()
@@ -801,21 +991,21 @@ local function runHub()
                         sndListStroke.Transparency = 0.3+p*0.6; task.wait(0.04)
                 end
         end)
-        local sPad = Instance.new(string.char(85,73,80,97,100,100,105,110,103), soundPlayerList)
+        local sPad = Instance.new("UIPadding", soundPlayerList)
         sPad.PaddingTop = UDim.new(0,5); sPad.PaddingLeft = UDim.new(0,4); sPad.PaddingRight = UDim.new(0,4)
-        local sLayout = Instance.new(string.char(85,73,76,105,115,116,76,97,121,111,117,116), soundPlayerList)
+        local sLayout = Instance.new("UIListLayout", soundPlayerList)
         sLayout.Padding = UDim.new(0,5); sLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-        local soundSide = Instance.new(string.char(70,114,97,109,101), Tab5Frame)
+        local soundSide = Instance.new("Frame", Tab5Frame)
         soundSide.Position = UDim2.new(0,140,0,0); soundSide.Size = UDim2.new(1,-140,1,0)
         soundSide.BackgroundTransparency = 1
 
-        local soundLabel = Instance.new(string.char(84,101,120,116,76,97,98,101,108), soundSide)
+        local soundLabel = Instance.new("TextLabel", soundSide)
         soundLabel.Size = UDim2.new(1,0,0,26); soundLabel.Text = "🎯 المستهدف: الكل"
         soundLabel.BackgroundColor3 = Color3.fromRGB(8,20,60); soundLabel.Font = Enum.Font.GothamBold
         soundLabel.TextSize = 11; soundLabel.BorderSizePixel = 0; whiteText(soundLabel)
         corner(soundLabel, 8); gradient(soundLabel, Color3.fromRGB(15,40,100), Color3.fromRGB(5,15,50), 90)
-        local sLabelStroke = Instance.new(string.char(85,73,83,116,114,111,107,101))
+        local sLabelStroke = Instance.new("UIStroke")
         sLabelStroke.Color = WHITE; sLabelStroke.Thickness = 1; sLabelStroke.Transparency = 0.5
         sLabelStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border; sLabelStroke.Parent = soundLabel
         task.spawn(function()
@@ -825,80 +1015,80 @@ local function runHub()
                 end
         end)
 
-        local soundBox = Instance.new(string.char(84,101,120,116,66,111,120), soundSide)
+        local soundBox = Instance.new("TextBox", soundSide)
         soundBox.Size = UDim2.new(1,0,0,28); soundBox.Position = UDim2.new(0,0,0,32)
-        soundBox.Text = ""; soundBox.PlaceholderText = string.char(83,111,117,110,100,32,73,68,46,46,46)
+        soundBox.Text = ""; soundBox.PlaceholderText = "Sound ID..."
         soundBox.PlaceholderColor3 = Color3.fromRGB(120,160,220)
         soundBox.BackgroundColor3 = Color3.fromRGB(5,12,40)
         soundBox.Font = Enum.Font.GothamMedium; soundBox.TextSize = 12
         soundBox.BorderSizePixel = 0; soundBox.ClearTextOnFocus = false
         whiteText(soundBox); corner(soundBox, 8); stroke(soundBox, BLUE_A, 1, 0.5)
         local actualSoundId = ""
-        soundBox:GetPropertyChangedSignal(string.char(84,101,120,116)):Connect(function()
+        soundBox:GetPropertyChangedSignal("Text"):Connect(function()
                 if #soundBox.Text > #actualSoundId then
                         actualSoundId = actualSoundId .. string.sub(soundBox.Text, #soundBox.Text, #soundBox.Text)
-                        soundBox.Text = string.rep(string.char(42), #actualSoundId)
+                        soundBox.Text = string.rep("*", #actualSoundId)
                 elseif #soundBox.Text < #actualSoundId then
                         actualSoundId = string.sub(actualSoundId, 1, #soundBox.Text)
                 end
         end)
-        local sbPad = Instance.new(string.char(85,73,80,97,100,100,105,110,103), soundBox)
+        local sbPad = Instance.new("UIPadding", soundBox)
         sbPad.PaddingLeft = UDim.new(0,8); sbPad.PaddingRight = UDim.new(0,8)
 
-        local playSoundBtn = Instance.new(string.char(84,101,120,116,66,117,116,116,111,110), soundSide)
+        local playSoundBtn = Instance.new("TextButton", soundSide)
         playSoundBtn.Size = UDim2.new(0.48,0,0,28); playSoundBtn.Position = UDim2.new(0,0,0,66)
         playSoundBtn.Text = "▶ تشغيل"
         styleButton(playSoundBtn, Color3.fromRGB(20,80,200), Color3.fromRGB(10,45,130))
 
-        local spamSoundBtn = Instance.new(string.char(84,101,120,116,66,117,116,116,111,110), soundSide)
+        local spamSoundBtn = Instance.new("TextButton", soundSide)
         spamSoundBtn.Size = UDim2.new(0.48,0,0,28); spamSoundBtn.Position = UDim2.new(0.52,0,0,66)
         spamSoundBtn.Text = "🚀 سبام"
         styleButton(spamSoundBtn, Color3.fromRGB(30,90,220), Color3.fromRGB(15,50,140))
 
-        local libraryTitle = Instance.new(string.char(84,101,120,116,76,97,98,101,108), soundSide)
+        local libraryTitle = Instance.new("TextLabel", soundSide)
         libraryTitle.Size = UDim2.new(1,0,0,18); libraryTitle.Position = UDim2.new(0,4,0,100)
         libraryTitle.BackgroundTransparency = 1; libraryTitle.Text = "🎶 مكتبة محمد ✨"
         libraryTitle.Font = Enum.Font.GothamBlack; libraryTitle.TextSize = 12
         libraryTitle.TextXAlignment = Enum.TextXAlignment.Left; whiteText(libraryTitle)
 
-        local songsFrame = Instance.new(string.char(83,99,114,111,108,108,105,110,103,70,114,97,109,101), soundSide)
+        local songsFrame = Instance.new("ScrollingFrame", soundSide)
         songsFrame.Size = UDim2.new(1,0,1,-122); songsFrame.Position = UDim2.new(0,0,0,122)
         songsFrame.BackgroundColor3 = Color3.fromRGB(3,8,28); songsFrame.BackgroundTransparency = 0.3
         songsFrame.ScrollBarThickness = 3; songsFrame.ScrollBarImageColor3 = BLUE_A
         songsFrame.BorderSizePixel = 0; songsFrame.CanvasSize = UDim2.new()
         songsFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
         corner(songsFrame, 10); stroke(songsFrame, BLUE_A, 1, 0.6)
-        local songsPad = Instance.new(string.char(85,73,80,97,100,100,105,110,103), songsFrame)
+        local songsPad = Instance.new("UIPadding", songsFrame)
         songsPad.PaddingTop = UDim.new(0,5); songsPad.PaddingLeft = UDim.new(0,5); songsPad.PaddingRight = UDim.new(0,5)
-        local sl = Instance.new(string.char(85,73,76,105,115,116,76,97,121,111,117,116), songsFrame)
+        local sl = Instance.new("UIListLayout", songsFrame)
         sl.Padding = UDim.new(0,4); sl.SortOrder = Enum.SortOrder.LayoutOrder
 
         local songs = {
-                {"ريمكس1",string.char(55,52,54,57,55,48,52,57,50,50,51,55,53,56)},{"ريمكس2",string.char(57,55,50,55,57,53,54,48,50,52,57,57,52,48)},{"ريمكس3",string.char(49,51,54,53,53,50,57,51,53,54,54,57,51,51,49)},
-                {"ريمكس4",string.char(56,51,53,56,53,48,54,55,56,55,57,48,52,56)},{"ريمكس5",string.char(49,51,57,57,51,48,48,56,51,49,56,48,52,51,50)},{"ريمكس6",string.char(55,53,50,57,57,54,48,53,48,53,56,54,48,57)},
-                {"ريمكس7",string.char(57,55,55,50,57,48,52,56,55,57,49,53,51,57)},{"ريمكس8",string.char(57,50,51,55,51,54,55,52,53,55,52,52,51,53)},{"Golden brown ✨️",string.char(55,56,51,49,55,50,51,54,53,55,54,49,53,51)},
-                {"ريمكس9",string.char(55,52,54,57,55,48,52,57,50,50,51,55,53,56)},{"ريمكس10",string.char(57,49,48,52,52,56,52,54,48,48,53,52,54,56)},{"ريمكس11",string.char(56,56,51,55,56,50,56,51,53,51,54,56,49,56)},
-                {"ريمكس12",string.char(56,48,49,57,55,50,53,57,48,53,51,51,53,51)},{"ريمكس13",string.char(56,48,48,50,56,55,57,52,52,51,55,49,53,50)},{"ريمكس14",string.char(49,48,54,55,48,56,56,54,52,50,52,54,49,57,51)},
-                {"ريمكس15",string.char(49,49,54,56,54,52,48,57,57,48,52,52,52,57,52)},{"ريمكس16",string.char(56,50,52,55,48,53,52,50,48,49,56,55,52,48)},{"ريمكس17",string.char(49,48,50,48,53,52,53,51,57,52,57,50,50,54,53)},
-                {"ريمكس18",string.char(56,56,51,54,51,50,52,53,56,54,52,55,50,53)},{"ريمكس19",string.char(49,48,53,56,52,56,53,53,51,51,56,51,55,52,54)},{"ريمكس20",string.char(49,48,48,57,57,49,54,53,55,53,57,56,52,57,56)},
-                {"ريمكس21",string.char(57,48,53,50,49,53,54,56,54,49,51,55,48,57)},{"ريمكس22",string.char(56,48,52,52,50,57,55,57,54,53,49,53,54,57)},{"ريمكس23",string.char(55,56,51,51,52,56,52,56,48,54,53,51,53,54)},
-                {"ريمكس 24",string.char(49,50,53,54,51,54,49,51,54,55,48,55,53,48,49)},{"ريمكس 25",string.char(49,49,52,55,49,52,54,50,48,56,49,52,49,55,50)},{"ريمكس 26",string.char(49,51,53,48,49,56,51,49,49,50,57,52,54,51,53)},
-                {"ريمكس 27",string.char(56,51,55,54,56,56,49,54,51,51,56,48,48,57)},{"ريمكس 28",string.char(56,50,55,52,54,50,50,52,52,57,50,52,50,48)},{"ريمكس 29",string.char(49,51,51,50,51,57,57,57,56,52,50,52,51,57,52)},
-                {"ريمكس 30",string.char(49,51,57,56,56,50,54,54,48,54,51,54,48,50,54)},{"ريمكس 31",string.char(49,51,51,51,57,49,55,49,55,49,54,52,49,54,51)},{"ريمكس 32",string.char(56,52,51,55,53,48,49,50,48,48,49,57,57,49)},
-                {"ريمكس 33",string.char(57,53,50,49,49,48,57,48,51,52,49,54,56,52)},{"ريمكس34",string.char(49,51,57,52,48,49,54,56,53,52,53,56,51,54,49)},{"ريمكس 35",string.char(49,51,51,51,55,57,48,50,49,56,53,49,51,57)},
-                {"ريمكس 36",string.char(49,51,54,50,57,48,56,54,53,52,56,55,52,54,56)},{"ريمكس 37",string.char(57,55,51,49,55,51,55,57,54,52,54,57,57,55)},{"ريمكس 38",string.char(49,49,57,52,51,57,49,57,53,55,49,48,57,50,49)},
-                {"ريمكس 39",string.char(49,48,54,50,53,49,48,54,48,52,56,55,51,56,55)},{"ريمكس 40",string.char(49,51,57,50,48,50,48,48,56,55,56,50,51,49,55)},{"ريمكس 41",string.char(49,48,48,52,55,50,50,48,55,48,48,54,52,54,48)},
-                {"ريمكس 42",string.char(56,48,52,52,50,57,55,57,54,53,49,53,54,57)},
+                {"ريمكس1","74697049223758"},{"ريمكس2","97279560249940"},{"ريمكس3","136552935669331"},
+                {"ريمكس4","83585067879048"},{"ريمكس5","139930083180432"},{"ريمكس6","75299605058609"},
+                {"ريمكس7","97729048791539"},{"ريمكس8","92373674574435"},{"Golden brown ✨️","78317236576153"},
+                {"ريمكس9","74697049223758"},{"ريمكس10","91044846005468"},{"ريمكس11","88378283536818"},
+                {"ريمكس12","80197259053353"},{"ريمكس13","80028794437152"},{"ريمكس14","106708864246193"},
+                {"ريمكس15","116864099044494"},{"ريمكس16","82470542018740"},{"ريمكس17","102054539492265"},
+                {"ريمكس18","88363245864725"},{"ريمكس19","105848553383746"},{"ريمكس20","100991657598498"},
+                {"ريمكس21","90521568613709"},{"ريمكس22","80442979651569"},{"ريمكس23","78334848065356"},
+                {"ريمكس 24","125636136707501"},{"ريمكس 25","114714620814172"},{"ريمكس 26","135018311294635"},
+                {"ريمكس 27","83768816338009"},{"ريمكس 28","82746224492420"},{"ريمكس 29","133239998424394"},
+                {"ريمكس 30","139882660636026"},{"ريمكس 31","133391717164163"},{"ريمكس 32","84375012001991"},
+                {"ريمكس 33","95211090341684"},{"ريمكس34","139401685458361"},{"ريمكس 35","13337902185139"},
+                {"ريمكس 36","136290865487468"},{"ريمكس 37","97317379646997"},{"ريمكس 38","119439195710921"},
+                {"ريمكس 39","106251060487387"},{"ريمكس 40","139202008782317"},{"ريمكس 41","100472207006460"},
+                {"ريمكس 42","80442979651569"},
         }
         for i, s in ipairs(songs) do
                 local n, id = s[1], s[2]
-                local b = Instance.new(string.char(84,101,120,116,66,117,116,116,111,110), songsFrame)
-                b.Size = UDim2.new(1,-8,0,24); b.Text = string.char(32,32)..n
+                local b = Instance.new("TextButton", songsFrame)
+                b.Size = UDim2.new(1,-8,0,24); b.Text = "  "..n
                 b.TextXAlignment = Enum.TextXAlignment.Left; b.LayoutOrder = i
                 local p = soundPalette[((i-1)%#soundPalette)+1]
                 styleButton(b, p[1], p[2])
                 b.MouseButton1Click:Connect(function()
-                        actualSoundId = id; soundBox.Text = string.rep(string.char(42),#id)
+                        actualSoundId = id; soundBox.Text = string.rep("*",#id)
                         fireSoundRemote(selectedTarget, id)
                         local orig = soundLabel.BackgroundColor3
                         TweenService:Create(soundLabel, TweenInfo.new(0.15), {BackgroundColor3 = WHITE}):Play()
@@ -913,11 +1103,11 @@ local function runHub()
                 spamming = not spamming
                 if spamming then
                         spamSoundBtn.Text = "🛑 إيقاف"
-                        local g = spamSoundBtn:FindFirstChildOfClass(string.char(85,73,71,114,97,100,105,101,110,116))
+                        local g = spamSoundBtn:FindFirstChildOfClass("UIGradient")
                         if g then g.Color = ColorSequence.new(Color3.fromRGB(255,255,255), Color3.fromRGB(180,180,180)) end
                 else
                         spamSoundBtn.Text = "🚀 سبام"
-                        local g = spamSoundBtn:FindFirstChildOfClass(string.char(85,73,71,114,97,100,105,101,110,116))
+                        local g = spamSoundBtn:FindFirstChildOfClass("UIGradient")
                         if g then g.Color = ColorSequence.new(Color3.fromRGB(30,90,220), Color3.fromRGB(15,50,140)) end
                 end
                 task.spawn(function()
@@ -927,16 +1117,16 @@ local function runHub()
 
         local function refreshSoundPlayers()
                 for _, v in pairs(soundPlayerList:GetChildren()) do
-                        if v:IsA(string.char(84,101,120,116,66,117,116,116,111,110)) then v:Destroy() end
+                        if v:IsA("TextButton") then v:Destroy() end
                 end
-                local all = Instance.new(string.char(84,101,120,116,66,117,116,116,111,110), soundPlayerList)
+                local all = Instance.new("TextButton", soundPlayerList)
                 all.Size = UDim2.new(1,-8,0,24); all.Text = "🌐 الكل"; all.LayoutOrder = 0
                 styleButton(all, BLUE_A, BLUE_B)
                 all.MouseButton1Click:Connect(function()
                         selectedTarget = "الكل"; soundLabel.Text = "🎯 المستهدف: الكل"
                 end)
                 for i, p in ipairs(Players:GetPlayers()) do
-                        local b = Instance.new(string.char(84,101,120,116,66,117,116,116,111,110), soundPlayerList)
+                        local b = Instance.new("TextButton", soundPlayerList)
                         b.Size = UDim2.new(1,-8,0,24); b.Text = "👤 "..p.Name; b.LayoutOrder = i
                         styleButton(b, Color3.fromRGB(8,20,60), Color3.fromRGB(5,12,40))
                         b.MouseButton1Click:Connect(function()
@@ -954,14 +1144,14 @@ local function runHub()
         local Tab6Frame = createContainerFrame()
         local Tab6Container = makeTabContainer(Tab6Frame)
 
-        local DescScroll = Instance.new(string.char(83,99,114,111,108,108,105,110,103,70,114,97,109,101))
+        local DescScroll = Instance.new("ScrollingFrame")
         DescScroll.Size = UDim2.new(1,-10,1,-10); DescScroll.Position = UDim2.new(0,5,0,5)
         DescScroll.BackgroundTransparency = 1; DescScroll.ScrollBarThickness = 3
         DescScroll.ScrollBarImageColor3 = BLUE_A; DescScroll.BorderSizePixel = 0
         DescScroll.CanvasSize = UDim2.new(); DescScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
         DescScroll.Parent = Tab6Container
 
-        local DescLabel = Instance.new(string.char(84,101,120,116,76,97,98,101,108))
+        local DescLabel = Instance.new("TextLabel")
         DescLabel.Size = UDim2.new(1,-10,0,0); DescLabel.AutomaticSize = Enum.AutomaticSize.Y
         DescLabel.Position = UDim2.new(0,5,0,5); DescLabel.BackgroundTransparency = 1
         DescLabel.Text =
